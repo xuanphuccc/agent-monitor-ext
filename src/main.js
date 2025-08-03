@@ -6,6 +6,8 @@ import { createPinia } from "pinia";
 import PrimeVue from "primevue/config";
 import { definePreset } from "@primeuix/themes";
 import Aura from "@primeuix/themes/aura";
+import ToastService from "primevue/toastservice";
+
 import App from "./App.vue";
 
 const app = createApp(App);
@@ -111,6 +113,7 @@ app.use(PrimeVue, {
     dateFormat: "dd/mm/yy",
   },
 });
+app.use(ToastService);
 
 // Bước này quan trọng: chạy MSW nếu đang ở môi trường phát triển
 if (import.meta.env.DEV) {

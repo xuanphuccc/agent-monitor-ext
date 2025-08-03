@@ -9,14 +9,99 @@ import ViewEmployee from "@/components/employee/components/ViewEmployee.vue";
 import EditEmployee from "@/components/employee/components/EditEmployee.vue";
 import { ref } from "vue";
 import { FORM_MODE } from "@/enums/xp-enum";
+import { getLocalStorage, setLocalStorage } from "@/utils/common";
+import { useToast } from "primevue/usetoast";
+import { getAiAgentUsageByProject } from "@/services/reports-api";
 
-const formMode = ref(FORM_MODE.View);
+const toast = useToast();
+const emit = defineEmits(["cancel", "delete", "save"]);
+const props = defineProps({
+  employee: {
+    type: Object,
+    required: true,
+  },
+
+  expand: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const scopedEmployee = ref(null);
+const isExpand = ref(null);
+
+/**
+ * Hàm khởi tạo dữ liệu ban đầu
+ */
+const initData = async (initEmployee = true) => {
+  try {
+    if (!props.employee) {
+      return;
+    }
+
+    if (initEmployee) {
+      scopedEmployee.value = JSON.parse(JSON.stringify(props.employee));
+      isExpand.value = props.expand ? "1" : null;
+    }
+  } catch (error) {
+    console.error("Error initializing employee data:", error);
+  }
+};
+initData();
+
+/**
+ * Hàm xử lý sự kiện khi nhấn Huỷ
+ */
+const onCancel = () => {
+  scopedEmployee.value.formMode = FORM_MODE.View; // Chuyển về chế độ xem
+  emit("cancel", props.employee.id);
+};
+
+/**
+ * Hàm xử lý sự kiện khi nhấn nút "Xoá"
+ */
+const onDelete = () => {
+  const localEmployees = getLocalStorage("employeeList") || [];
+  const updatedEmployees = localEmployees.filter((emp) => emp.id !== props.employee.id);
+  setLocalStorage("employeeList", updatedEmployees);
+
+  emit("delete", props.employee.id);
+
+  toast.add({ severity: "success", summary: "Xoá dữ liệu thành công.", life: 3000 });
+};
+
+/**
+ * Hàm xử lý sự kiện khi nhấn nút "Lưu"
+ */
+const onSave = async (employee) => {
+  if (!employee) {
+    return;
+  }
+
+  scopedEmployee.value = {
+    ...employee,
+    formMode: FORM_MODE.View,
+  };
+
+  await initData(false);
+
+  // Gọi sự kiện save để thông báo cho cha biết
+  emit("save", employee);
+};
+
+/**
+ * Hàm xử lý sự kiện khi nhấn nút "Chỉnh sửa"
+ */
+const onEdit = () => {
+  scopedEmployee.value.formMode = FORM_MODE.Edit; // Chuyển sang chế độ chỉnh sửa
+  isExpand.value = "1"; // Mở rộng accordion
+};
 </script>
 
 <template>
   <div class="xp-employee-detail">
-    <Accordion value="0">
-      <AccordionPanel value="0">
+    <Accordion v-model:value="isExpand">
+      <AccordionPanel value="1">
         <AccordionHeader>
           <div class="xp-employee-header">
             <div class="xp-employee-info">
@@ -41,7 +126,7 @@ const formMode = ref(FORM_MODE.View);
                 title="Tải lại"
               />
               <Button
-                @click.stop=""
+                @click.stop="onEdit"
                 @mousedown.stop=""
                 size="small"
                 icon="pi pi-cog"
@@ -52,8 +137,18 @@ const formMode = ref(FORM_MODE.View);
           </div>
         </AccordionHeader>
         <AccordionContent>
-          <ViewEmployee v-if="formMode === FORM_MODE.View" />
-          <EditEmployee v-if="formMode === FORM_MODE.Edit" />
+          <EditEmployee
+            v-if="
+              scopedEmployee.formMode === FORM_MODE.Edit ||
+              scopedEmployee.formMode === FORM_MODE.Create
+            "
+            :initialValues="scopedEmployee"
+            :formMode="scopedEmployee.formMode"
+            @save="onSave"
+            @delete="onDelete"
+            @cancel="onCancel"
+          />
+          <ViewEmployee v-else />
         </AccordionContent>
       </AccordionPanel>
     </Accordion>
@@ -99,5 +194,9 @@ const formMode = ref(FORM_MODE.View);
     .xp-employee-actions {
     }
   }
+}
+
+.xp-employee-detail + .xp-employee-detail {
+  margin-top: 24px;
 }
 </style>

@@ -5,6 +5,7 @@ import ProjectTab from "@/components/project/ProjectTab.vue";
 import DashboardTab from "@/components/dashboard/DashboardTab.vue";
 import { SelectButton } from "primevue";
 import { ref } from "vue";
+import Toast from "primevue/toast";
 
 const currentTab = ref(1);
 const options = [
@@ -30,6 +31,8 @@ const options = [
       <EmployeeTab v-if="currentTab === 1" />
       <ProjectTab v-if="currentTab === 2" />
       <DashboardTab v-if="currentTab === 3" />
+
+      <Toast />
     </div>
   </MainLayout>
 </template>

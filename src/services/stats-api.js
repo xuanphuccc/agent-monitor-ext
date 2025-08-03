@@ -8,7 +8,7 @@ const basePath = "/stats";
  * @param {*} employeeCode - Mã nhân viên cần lấy dữ liệu
  * @returns {Promise<Object>} - Promise chứa dữ liệu lịch sử sử dụng
  */
-export const getMonthlyCalendar = async (month, year, employeeCode) => {
+export const getMonthlyUsageHistory = async (month, year, employeeCode) => {
   try {
     const response = await axiosClient.get(`${basePath}/monthly-calendar`, {
       params: { month, year, employeeCode },
