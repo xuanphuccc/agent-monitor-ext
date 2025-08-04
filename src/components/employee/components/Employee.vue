@@ -11,7 +11,6 @@ import { ref } from "vue";
 import { FORM_MODE } from "@/enums/xp-enum";
 import { getLocalStorage, setLocalStorage } from "@/utils/common";
 import { useToast } from "primevue/usetoast";
-import { getAiAgentUsageByProject } from "@/services/reports-api";
 
 const toast = useToast();
 const emit = defineEmits(["cancel", "delete", "save"]);
@@ -28,6 +27,7 @@ const props = defineProps({
 });
 
 const scopedEmployee = ref(null);
+const employeeInfo = ref(null);
 const isExpand = ref(null);
 
 /**
@@ -96,6 +96,19 @@ const onEdit = () => {
   scopedEmployee.value.formMode = FORM_MODE.Edit; // Chuyển sang chế độ chỉnh sửa
   isExpand.value = "1"; // Mở rộng accordion
 };
+
+/**
+ * Hàm lấy ký tự đầu tiên của tên để làm avatar
+ * @param {string} fullName - Tên đầy đủ của nhân viên
+ */
+const getAvatarLetter = (fullName) => {
+  if (!fullName || !fullName.trim()) {
+    return "N";
+  }
+  const nameParts = fullName.trim().split(" ");
+  const lastName = nameParts[nameParts.length - 1];
+  return lastName.charAt(0).toUpperCase();
+};
 </script>
 
 <template>
@@ -106,14 +119,22 @@ const onEdit = () => {
           <div class="xp-employee-header">
             <div class="xp-employee-info">
               <Avatar
-                label="P"
+                :label="getAvatarLetter(employeeInfo?.employeeName)"
                 class="mr-2"
                 style="background-color: #dee9fc; color: #1a2551"
                 shape="circle"
               />
               <div class="xp-employee-name-container">
-                <div class="xp-employee-name">Trần Xuân Phúc</div>
-                <div class="xp-employee-role">Lập trình viên</div>
+                <div class="xp-employee-name">
+                  {{
+                    employeeInfo && employeeInfo.employeeName ? employeeInfo.employeeName : "N/A"
+                  }}
+                </div>
+                <div class="xp-employee-role">
+                  {{
+                    employeeInfo && employeeInfo.positionName ? employeeInfo.positionName : "N/A"
+                  }}
+                </div>
               </div>
             </div>
             <div class="xp-employee-actions">
@@ -148,7 +169,7 @@ const onEdit = () => {
             @delete="onDelete"
             @cancel="onCancel"
           />
-          <ViewEmployee v-else />
+          <ViewEmployee v-else :employee="scopedEmployee" @dataChange="employeeInfo = $event" />
         </AccordionContent>
       </AccordionPanel>
     </Accordion>

@@ -1,10 +1,10 @@
-import { http, HttpResponse } from "msw";
+import { http, HttpResponse, delay } from "msw";
 
 export const handlers = [
   /**
    * Tình hình sử dụng AI theo tháng của nhân viên
    */
-  http.get("/stats/monthly-calendar", ({ request }) => {
+  http.get("/stats/monthly-calendar", async ({ request }) => {
     const url = new URL(request.url);
     const month = url.searchParams.get("month");
     const year = url.searchParams.get("year");
@@ -19,6 +19,8 @@ export const handlers = [
         { status: 400 },
       );
     }
+
+    await delay(500); // Giả lập độ trễ 500ms
 
     return HttpResponse.json({
       success: true,
@@ -582,7 +584,7 @@ export const handlers = [
   /**
    * Tình hình sử dụng AI theo dự án
    */
-  http.get("/reports/ai-agent/by-project/:projectName/employees", ({ request, params }) => {
+  http.get("/reports/ai-agent/by-project/:projectName/employees", async ({ request, params }) => {
     const url = new URL(request.url);
     const projectName = params.projectName;
     const startDate = url.searchParams.get("startDate");
@@ -598,6 +600,8 @@ export const handlers = [
       );
     }
 
+    await delay(1000); // Giả lập độ trễ 500ms
+
     return HttpResponse.json({
       success: true,
       source: "mock",
@@ -605,9 +609,9 @@ export const handlers = [
       data: [
         {
           aiAgentTotalRequests: 0,
-          clineActMode: 1,
-          clinetPlanMode: 79,
-          clineTotalRequests: 80,
+          clineActMode: 0,
+          clinePlanMode: 10,
+          clineTotalRequests: 15,
           cursorAgentRequests: 0,
           cursorAskRequests: 0,
           cursorCmdkUsages: 0,
@@ -618,17 +622,17 @@ export const handlers = [
           employeeId: 415,
           employeeName: "Phí Hồng Mạnh",
           meetsUsageThreshold: true,
-          oneAiTotalRequests: 0,
+          oneAiTotalRequests: 1,
           positionCategory: "overlap",
           positionName: "Quản lý thi công",
-          relevantToolsTotal: 80,
+          relevantToolsTotal: 15,
           shortName: "phmanh",
-          totalAllToolsRequests: 80,
+          totalAllToolsRequests: 15,
         },
         {
           aiAgentTotalRequests: 10,
           clineActMode: 20,
-          clinetPlanMode: 5,
+          clinePlanMode: 5,
           clineTotalRequests: 25,
           cursorAgentRequests: 1,
           cursorAskRequests: 2,
@@ -650,7 +654,7 @@ export const handlers = [
         {
           aiAgentTotalRequests: 5,
           clineActMode: 15,
-          clinetPlanMode: 60,
+          clinePlanMode: 60,
           clineTotalRequests: 75,
           cursorAgentRequests: 0,
           cursorAskRequests: 0,
@@ -672,7 +676,7 @@ export const handlers = [
         {
           aiAgentTotalRequests: 0,
           clineActMode: 50,
-          clinetPlanMode: 50,
+          clinePlanMode: 50,
           clineTotalRequests: 100,
           cursorAgentRequests: 10,
           cursorAskRequests: 5,
@@ -694,7 +698,7 @@ export const handlers = [
         {
           aiAgentTotalRequests: 2,
           clineActMode: 5,
-          clinetPlanMode: 10,
+          clinePlanMode: 10,
           clineTotalRequests: 15,
           cursorAgentRequests: 0,
           cursorAskRequests: 0,
@@ -716,7 +720,7 @@ export const handlers = [
         {
           aiAgentTotalRequests: 30,
           clineActMode: 30,
-          clinetPlanMode: 30,
+          clinePlanMode: 30,
           clineTotalRequests: 60,
           cursorAgentRequests: 5,
           cursorAskRequests: 5,
@@ -738,7 +742,7 @@ export const handlers = [
         {
           aiAgentTotalRequests: 1,
           clineActMode: 1,
-          clinetPlanMode: 1,
+          clinePlanMode: 1,
           clineTotalRequests: 2,
           cursorAgentRequests: 0,
           cursorAskRequests: 0,
@@ -764,7 +768,7 @@ export const handlers = [
   /**
    * Tình hình sử dụng AI toàn công ty
    */
-  http.get("/reports/ai-agent/overall", ({ request }) => {
+  http.get("/reports/ai-agent/overall", async ({ request }) => {
     const url = new URL(request.url);
     const startDate = url.searchParams.get("startDate");
     const endDate = url.searchParams.get("endDate");
@@ -778,6 +782,8 @@ export const handlers = [
         { status: 400 },
       );
     }
+
+    await delay(500); // Giả lập độ trễ 500ms
 
     return HttpResponse.json({
       success: true,

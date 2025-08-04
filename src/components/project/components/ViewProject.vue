@@ -127,7 +127,7 @@ const setChartOptions = () => {
       .xp-sections-filter {
         display: flex;
         align-items: center;
-        gap: 8px;
+        justify-content: space-between;
         margin-bottom: 16px;
       }
     }
