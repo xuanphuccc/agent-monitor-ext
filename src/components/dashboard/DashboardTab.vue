@@ -97,7 +97,6 @@ import Avatar from "primevue/avatar";
     align-items: center;
     justify-content: space-between;
     padding: 8px 0;
-    border-bottom: 1px solid var(--color-border);
 
     .xp-ranking-left {
       display: flex;
@@ -114,12 +113,14 @@ import Avatar from "primevue/avatar";
         .xp-ranking-name {
           font-weight: 600;
           font-size: 14px;
+          line-height: 18px;
           color: var(--color-text);
         }
 
         .xp-ranking-role {
-          font-size: 12px;
-          color: var(--color-secondary-text);
+          font-size: 11px;
+          line-height: 14px;
+          color: var(--color-text-secondary);
         }
       }
     }

@@ -7,7 +7,7 @@ import { useToast } from "primevue/usetoast";
 
 const toast = useToast();
 
-const emit = defineEmits(["dataChange"]);
+const emit = defineEmits(["dataChange", "loading"]);
 const props = defineProps({
   employee: {
     type: Object,
@@ -20,9 +20,14 @@ const datePickerConfig = ref({
     border: {
       radius: "6px",
     },
+    selected: {
+      background: "#cbd5e1",
+      color: "#334155",
+    },
   },
 });
 
+const loading = ref(false);
 const daylyUsageData = ref(null);
 const monthlyUsageData = ref(null);
 
@@ -82,6 +87,9 @@ const initData = async () => {
       return;
     }
 
+    loading.value = true;
+    emit("loading", true);
+
     const currentDate = new Date();
     const currentDay = currentDate.getDate();
     const currentMonth = currentDate.getMonth();
@@ -116,8 +124,13 @@ const initData = async () => {
         life: 3000,
       });
     }
+
+    loading.value = false;
+    emit("loading", false);
   } catch (error) {
     console.error("Error initializing employee data:", error);
+    loading.value = false;
+    emit("loading", false);
   }
 };
 initData();
@@ -139,7 +152,7 @@ initData();
             />
           </div>
           <div class="xp-overview-info">
-            <div class="xp-overview-info-title">Tổng request</div>
+            <div class="xp-overview-info-title">Số requests</div>
             <div class="xp-overview-info-value">
               {{
                 daylyUsageData && daylyUsageData.relevantToolsTotal
@@ -190,7 +203,21 @@ initData();
       <div class="xp-view-section-title">Tháng này</div>
       <div class="xp-view-section-content">
         <DatePicker inline class="xp-date-picker" :dt="datePickerConfig">
-          <!-- <template #date="slotProps"> HIHI </template> -->
+          <template #date="slotProps">
+            <div class="xp-datepicker-day-content">
+              <div class="xp-datepicker-day">
+                <div
+                  v-if="slotProps.date.selectable"
+                  class="xp-datepicker-indicator"
+                  :style="{ background: '#358ffa' }"
+                ></div>
+                <div class="xp-datepicker-day-number">{{ slotProps.date.day }}</div>
+              </div>
+              <div class="xp-datepicker-total-requests">
+                {{ slotProps.date.selectable ? "12" : "" }}
+              </div>
+            </div>
+          </template>
         </DatePicker>
       </div>
     </div>
@@ -269,7 +296,6 @@ initData();
           .xp-employee-detail-label {
             font-size: 14px;
             line-height: 18px;
-            color: var(--color-text-secondary);
           }
 
           .xp-employee-detail-value {
@@ -287,6 +313,40 @@ initData();
 
       .xp-date-picker {
         width: 100%;
+      }
+
+      .xp-datepicker-day-content {
+        width: 100%;
+        height: 100%;
+        padding: 2px;
+        display: flex;
+        flex-direction: column;
+        // justify-content: ;
+        .xp-datepicker-day {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: auto;
+          .xp-datepicker-indicator {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+          }
+
+          .xp-datepicker-day-number {
+            font-size: 10px;
+            line-height: 10px;
+            color: var(--color-text-secondary);
+            margin-left: auto;
+          }
+        }
+
+        .xp-datepicker-total-requests {
+          font-size: 12px;
+          line-height: 12px;
+          font-weight: 600;
+          text-align: start;
+        }
       }
     }
   }

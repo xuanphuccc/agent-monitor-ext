@@ -5,12 +5,13 @@ import AccordionHeader from "primevue/accordionheader";
 import AccordionContent from "primevue/accordioncontent";
 import Avatar from "primevue/avatar";
 import Button from "primevue/button";
+import Skeleton from "primevue/skeleton";
+import { useToast } from "primevue/usetoast";
 import ViewEmployee from "@/components/employee/components/ViewEmployee.vue";
 import EditEmployee from "@/components/employee/components/EditEmployee.vue";
 import { ref } from "vue";
 import { FORM_MODE } from "@/enums/xp-enum";
 import { getLocalStorage, setLocalStorage } from "@/utils/common";
-import { useToast } from "primevue/usetoast";
 
 const toast = useToast();
 const emit = defineEmits(["cancel", "delete", "save"]);
@@ -29,6 +30,7 @@ const props = defineProps({
 const scopedEmployee = ref(null);
 const employeeInfo = ref(null);
 const isExpand = ref(null);
+const loading = ref(false);
 
 /**
  * Hàm khởi tạo dữ liệu ban đầu
@@ -41,7 +43,7 @@ const initData = async (initEmployee = true) => {
 
     if (initEmployee) {
       scopedEmployee.value = JSON.parse(JSON.stringify(props.employee));
-      isExpand.value = props.expand ? "1" : null;
+      isExpand.value = props.expand || props.employee.formMode === FORM_MODE.Create ? "1" : null;
     }
   } catch (error) {
     console.error("Error initializing employee data:", error);
@@ -117,27 +119,37 @@ const getAvatarLetter = (fullName) => {
       <AccordionPanel value="1">
         <AccordionHeader>
           <div class="xp-employee-header">
-            <div class="xp-employee-info">
+            <div v-if="scopedEmployee.formMode === FORM_MODE.View" class="xp-employee-info">
+              <Skeleton v-if="loading" shape="circle" size="28px" class="mr-2"></Skeleton>
               <Avatar
+                v-else
                 :label="getAvatarLetter(employeeInfo?.employeeName)"
                 class="mr-2"
                 style="background-color: #dee9fc; color: #1a2551"
                 shape="circle"
               />
               <div class="xp-employee-name-container">
-                <div class="xp-employee-name">
+                <Skeleton v-if="loading" width="120px" height="14px"></Skeleton>
+                <div v-else class="xp-employee-name">
                   {{
                     employeeInfo && employeeInfo.employeeName ? employeeInfo.employeeName : "N/A"
                   }}
                 </div>
-                <div class="xp-employee-role">
+
+                <Skeleton
+                  v-if="loading"
+                  width="100px"
+                  height="12px"
+                  style="margin-top: 6px"
+                ></Skeleton>
+                <div v-else class="xp-employee-role">
                   {{
                     employeeInfo && employeeInfo.positionName ? employeeInfo.positionName : "N/A"
                   }}
                 </div>
               </div>
             </div>
-            <div class="xp-employee-actions">
+            <div v-if="scopedEmployee.formMode === FORM_MODE.View" class="xp-employee-actions">
               <Button
                 @click.stop=""
                 @mousedown.stop=""
@@ -169,7 +181,12 @@ const getAvatarLetter = (fullName) => {
             @delete="onDelete"
             @cancel="onCancel"
           />
-          <ViewEmployee v-else :employee="scopedEmployee" @dataChange="employeeInfo = $event" />
+          <ViewEmployee
+            v-else
+            :employee="scopedEmployee"
+            @loading="loading = $event"
+            @dataChange="employeeInfo = $event"
+          />
         </AccordionContent>
       </AccordionPanel>
     </Accordion>

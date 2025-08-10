@@ -20,3 +20,43 @@ export const setLocalStorage = (key, value) => {
     localStorage.setItem(key, JSON.stringify(value));
   }
 };
+
+/**
+ * Hiển thị thông báo
+ * @param {string} message - Thông điệp cần hiển thị
+ * @param {string} type - Loại thông báo (success, error, info, warning)
+ */
+export const showNotification = (title = "This is title", message = "This is message") => {
+  chrome.notifications.create({
+    type: "basic",
+    iconUrl: "logo.svg",
+    title: title,
+    message: message,
+    // buttons: [{ title: "Keep it Flowing." }],
+    priority: 0,
+  });
+};
+
+/**
+ * Lưu cài đặt vào localStorage
+ * @param {Object} settings - Đối tượng chứa các cài đặt
+ */
+export const saveSettings = (settings) => {
+  setLocalStorage("settings", settings);
+};
+
+/**
+ * Lấy cài đặt từ localStorage
+ * @returns {Object} - Đối tượng chứa các cài đặt đã lưu
+ */
+export const getSettings = () => {
+  return (
+    getLocalStorage("settings") || {
+      notificationEnabled: true,
+      quickViewRequests: true,
+      kpiAlert: true,
+      minRequestCount: 5,
+      notificationTime: new Date(),
+    }
+  );
+};

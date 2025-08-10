@@ -26,8 +26,15 @@ import Button from "primevue/button";
         </div>
         <div class="xp-title">AI Agent Monitor</div>
       </div>
-      <div class="xp-header-close">
-        <Button @click.stop="" size="small" icon="pi pi-times" variant="text" aria-label="Cancel" />
+      <div class="xp-header-actions">
+        <Button
+          @click.stop="$emit('setting')"
+          size="small"
+          icon="pi pi-cog"
+          variant="text"
+          title="Cài đặt"
+        />
+        <Button @click.stop="" size="small" icon="pi pi-times" variant="text" title="Đóng" />
       </div>
     </div>
 
@@ -70,7 +77,10 @@ import Button from "primevue/button";
       }
     }
 
-    .xp-header-close {
+    .xp-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
   }
 

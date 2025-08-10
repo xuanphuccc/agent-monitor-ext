@@ -3,6 +3,7 @@ import MainLayout from "@/layouts/MainLayout.vue";
 import EmployeeTab from "@/components/employee/EmployeeTab.vue";
 import ProjectTab from "@/components/project/ProjectTab.vue";
 import DashboardTab from "@/components/dashboard/DashboardTab.vue";
+import Setting from "@/components/setting/Setting.vue";
 import { SelectButton } from "primevue";
 import { ref } from "vue";
 import Toast from "primevue/toast";
@@ -13,24 +14,30 @@ const options = [
   { label: "Dự án", value: 2 },
   { label: "Tổng quan", value: 3 },
 ];
+const showSetting = ref(false);
 </script>
 
 <template>
-  <MainLayout>
+  <MainLayout @setting="showSetting = !showSetting">
     <div class="xp-main-content">
-      <div class="xp-header">
-        <SelectButton
-          v-model="currentTab"
-          optionLabel="label"
-          optionValue="value"
-          :options="options"
-          size="small"
-        />
-      </div>
+      <template v-if="showSetting">
+        <Setting @back="showSetting = false" />
+      </template>
+      <template v-else>
+        <div class="xp-header">
+          <SelectButton
+            v-model="currentTab"
+            optionLabel="label"
+            optionValue="value"
+            :options="options"
+            size="small"
+          />
+        </div>
 
-      <EmployeeTab v-if="currentTab === 1" />
-      <ProjectTab v-if="currentTab === 2" />
-      <DashboardTab v-if="currentTab === 3" />
+        <EmployeeTab v-if="currentTab === 1" />
+        <ProjectTab v-if="currentTab === 2" />
+        <DashboardTab v-if="currentTab === 3" />
+      </template>
 
       <Toast />
     </div>
