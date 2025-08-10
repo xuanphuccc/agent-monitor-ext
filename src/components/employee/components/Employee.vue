@@ -9,7 +9,7 @@ import Skeleton from "primevue/skeleton";
 import { useToast } from "primevue/usetoast";
 import ViewEmployee from "@/components/employee/components/ViewEmployee.vue";
 import EditEmployee from "@/components/employee/components/EditEmployee.vue";
-import { ref } from "vue";
+import { ref, useTemplateRef } from "vue";
 import { FORM_MODE } from "@/enums/xp-enum";
 import { getLocalStorage, setLocalStorage } from "@/utils/common";
 
@@ -31,6 +31,7 @@ const scopedEmployee = ref(null);
 const employeeInfo = ref(null);
 const isExpand = ref(null);
 const loading = ref(false);
+const viewEmployeeRef = useTemplateRef("view-employee-ref");
 
 /**
  * Hàm khởi tạo dữ liệu ban đầu
@@ -111,6 +112,15 @@ const getAvatarLetter = (fullName) => {
   const lastName = nameParts[nameParts.length - 1];
   return lastName.charAt(0).toUpperCase();
 };
+
+/**
+ * Hàm nạp lại dữ liệu nhân viên
+ */
+const reloadData = () => {
+  if (viewEmployeeRef.value && typeof viewEmployeeRef.value.initData === "function") {
+    viewEmployeeRef.value.initData();
+  }
+};
 </script>
 
 <template>
@@ -151,7 +161,7 @@ const getAvatarLetter = (fullName) => {
             </div>
             <div v-if="scopedEmployee.formMode === FORM_MODE.View" class="xp-employee-actions">
               <Button
-                @click.stop=""
+                @click.stop="reloadData"
                 @mousedown.stop=""
                 size="small"
                 icon="pi pi-refresh"
@@ -183,6 +193,7 @@ const getAvatarLetter = (fullName) => {
           />
           <ViewEmployee
             v-else
+            ref="view-employee-ref"
             :employee="scopedEmployee"
             @loading="loading = $event"
             @dataChange="employeeInfo = $event"

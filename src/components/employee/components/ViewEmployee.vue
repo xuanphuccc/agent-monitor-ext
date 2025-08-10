@@ -134,6 +134,10 @@ const initData = async () => {
   }
 };
 initData();
+
+defineExpose({
+  initData,
+});
 </script>
 
 <template>

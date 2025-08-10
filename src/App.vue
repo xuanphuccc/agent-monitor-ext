@@ -30,6 +30,7 @@ const showSetting = ref(false);
             optionLabel="label"
             optionValue="value"
             :options="options"
+            :allowEmpty="false"
             size="small"
           />
         </div>

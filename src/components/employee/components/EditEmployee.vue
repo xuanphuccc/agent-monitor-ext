@@ -57,7 +57,6 @@ const onFormSubmit = (form) => {
       const formValues = {
         ...form.values,
         id: props.initialValues.id || null, // Giữ nguyên ID nếu có, hoặc tạo mới nếu không có
-        formMode: props.formMode,
       };
 
       const localEmployees = getLocalStorage("employeeList") || [];
