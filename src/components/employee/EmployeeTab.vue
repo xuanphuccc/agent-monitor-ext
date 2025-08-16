@@ -29,11 +29,15 @@ initData();
  * Hàm xử lý sự kiện khi nhấn nút "Thêm mới"
  */
 const onAddNewEmployee = () => {
-  // Thêm logic để mở form thêm mới nhân viên
+  // Kiểm tra xem có nhân viên nào đang ở chế độ thêm mới hay không
+  const existingNewEmployee = employeeList.value.find((emp) => emp.formMode === FORM_MODE.Create);
+  if (existingNewEmployee) {
+    return; // Nếu có, không cho phép thêm mới
+  }
+
   employeeList.value.push({
     id: uuidv4(),
     employeeCode: "",
-    projectName: "",
     formMode: FORM_MODE.Create, // Chuyển sang chế độ thêm mới
   });
 };
@@ -110,9 +114,8 @@ const onSave = (employee) => {
 <style lang="scss" scoped>
 .xp-employee-tab {
   width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  padding: 0px 12px;
+  // min-height: 100%;
+  padding: 0px 12px 12px;
 
   .xp-employee-tab-actions {
     display: flex;

@@ -26,14 +26,12 @@ const props = defineProps({
 const toast = useToast();
 const initialValues = ref({
   employeeCode: "",
-  projectName: "",
 });
 
 const resolver = ref(
   zodResolver(
     z.object({
       employeeCode: z.string().min(1, { message: "Mã nhân viên không được để trống." }),
-      projectName: z.string().min(1, { message: "Tên dự án không được để trống." }),
     }),
   ),
 );
@@ -42,7 +40,6 @@ const resolver = ref(
 const initFormValues = () => {
   initialValues.value = {
     employeeCode: props.initialValues.employeeCode || "",
-    projectName: props.initialValues.projectName || "",
   };
 };
 initFormValues();
@@ -106,6 +103,7 @@ const onFormSubmit = (form) => {
           placeholder="Nhập mã nhân viên VD: B06-0008"
           fluid
           size="small"
+          :autofocus="true"
         />
         <Message
           v-if="$form.employeeCode?.invalid"
@@ -114,20 +112,6 @@ const onFormSubmit = (form) => {
           variant="simple"
           >{{ $form.employeeCode.error?.message }}</Message
         >
-      </div>
-      <div class="xp-form-field">
-        <label class="xp-form-label" for="employee-project">Tên dự án</label>
-        <InputText
-          name="projectName"
-          id="employee-project"
-          type="text"
-          placeholder="Nhập tên dự án"
-          fluid
-          size="small"
-        />
-        <Message v-if="$form.projectName?.invalid" severity="error" size="small" variant="simple">{{
-          $form.projectName.error?.message
-        }}</Message>
       </div>
 
       <div class="xp-form-actions">

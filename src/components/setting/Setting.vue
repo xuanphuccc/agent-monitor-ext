@@ -157,6 +157,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  padding-top: 12px;
 
   .xp-setting-header {
     display: flex;

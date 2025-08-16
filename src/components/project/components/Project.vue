@@ -5,35 +5,178 @@ import AccordionHeader from "primevue/accordionheader";
 import AccordionContent from "primevue/accordioncontent";
 import Avatar from "primevue/avatar";
 import Button from "primevue/button";
+import Skeleton from "primevue/skeleton";
+import { useToast } from "primevue/usetoast";
 import ViewProject from "@/components/project/components/ViewProject.vue";
 import EditProject from "@/components/project/components/EditProject.vue";
-import { ref } from "vue";
+import { ref, useTemplateRef } from "vue";
 import { FORM_MODE } from "@/enums/xp-enum";
+import { getLocalStorage, setLocalStorage } from "@/utils/common";
 
-const formMode = ref(FORM_MODE.View);
+const toast = useToast();
+const emit = defineEmits(["cancel", "delete", "save"]);
+const props = defineProps({
+  project: {
+    type: Object,
+    required: true,
+  },
+
+  expand: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const scopedProject = ref(null);
+const projectInfo = ref(null);
+const isExpand = ref(null);
+const loading = ref(false);
+const viewProjectRef = useTemplateRef("view-project-ref");
+
+/**
+ * Hàm khởi tạo dữ liệu ban đầu
+ */
+const initData = async (initProject = true) => {
+  try {
+    if (!props.project) {
+      return;
+    }
+
+    if (initProject) {
+      scopedProject.value = JSON.parse(JSON.stringify(props.project));
+      isExpand.value = props.expand || props.project.formMode === FORM_MODE.Create ? "1" : null;
+    }
+  } catch (error) {
+    console.error("Error initializing project data:", error);
+  }
+};
+initData();
+
+/**
+ * Hàm xử lý sự kiện khi nhấn Huỷ
+ */
+const onCancel = () => {
+  scopedProject.value.formMode = FORM_MODE.View; // Chuyển về chế độ xem
+  emit("cancel", props.project.id);
+};
+
+/**
+ * Hàm xử lý sự kiện khi nhấn nút "Xoá"
+ */
+const onDelete = () => {
+  const localProjects = getLocalStorage("projectList") || [];
+  const updatedProjects = localProjects.filter((proj) => proj.id !== props.project.id);
+  setLocalStorage("projectList", updatedProjects);
+
+  emit("delete", props.project.id);
+
+  toast.add({ severity: "success", summary: "Xoá dữ liệu thành công.", life: 3000 });
+};
+
+/**
+ * Hàm xử lý sự kiện khi nhấn nút "Lưu"
+ */
+const onSave = async (project) => {
+  if (!project) {
+    return;
+  }
+
+  scopedProject.value = {
+    ...project,
+    formMode: FORM_MODE.View,
+  };
+
+  await initData(false);
+
+  // Gọi sự kiện save để thông báo cho cha biết
+  emit("save", project);
+};
+
+/**
+ * Hàm xử lý sự kiện khi nhấn nút "Chỉnh sửa"
+ */
+const onEdit = () => {
+  scopedProject.value.formMode = FORM_MODE.Edit; // Chuyển sang chế độ chỉnh sửa
+  isExpand.value = "1"; // Mở rộng accordion
+};
+
+/**
+ * Hàm lấy ký tự đầu tiên của tên để làm avatar
+ * @param {string} fullName - Tên đầy đủ của dự án
+ */
+const getAvatarLetter = (fullName) => {
+  if (!fullName || !fullName.trim()) {
+    return "N";
+  }
+  const nameParts = fullName.trim().split(" ");
+  const lastName = nameParts[nameParts.length - 1];
+  return lastName.charAt(0).toUpperCase();
+};
+
+/**
+ * Hàm nạp lại dữ liệu nhân viên
+ */
+const reloadData = () => {
+  if (viewProjectRef.value && typeof viewProjectRef.value.initData === "function") {
+    viewProjectRef.value.initData();
+  }
+};
 </script>
 
 <template>
   <div class="xp-project-detail">
-    <Accordion value="0">
-      <AccordionPanel value="0">
+    <Accordion
+      v-model:value="isExpand"
+      :dt="{
+        panel: { border: { width: '0px' } },
+      }"
+    >
+      <AccordionPanel value="1">
         <AccordionHeader>
           <div class="xp-project-header">
-            <div class="xp-project-info">
+            <!-- Title khi thêm mới/chỉnh sửa -->
+            <div
+              v-if="
+                scopedProject.formMode === FORM_MODE.Create ||
+                scopedProject.formMode === FORM_MODE.Edit
+              "
+              class="xp-employee-header-title"
+            >
+              {{ scopedProject.formMode === FORM_MODE.Create ? "Thêm mới" : "Chỉnh sửa" }}
+            </div>
+
+            <!-- Hiển thị thông tin dự án khi ở chế độ xem -->
+            <div v-if="scopedProject.formMode === FORM_MODE.View" class="xp-project-info">
+              <Skeleton v-if="loading" shape="circle" size="28px" class="mr-2"></Skeleton>
               <Avatar
-                label="I"
+                v-else
+                :label="getAvatarLetter(projectInfo?.projectName)"
                 class="mr-2"
                 style="background-color: #dee9fc; color: #1a2551"
                 shape="circle"
               />
               <div class="xp-project-name-container">
-                <div class="xp-project-name">IVAN</div>
-                <div class="xp-project-role">Khối doanh nghiệp</div>
+                <Skeleton v-if="loading" width="120px" height="14px"></Skeleton>
+                <div v-else class="xp-project-name">
+                  {{ projectInfo && projectInfo.projectName ? projectInfo.projectName : "N/A" }}
+                </div>
+
+                <Skeleton
+                  v-if="loading"
+                  width="100px"
+                  height="12px"
+                  style="margin-top: 6px"
+                ></Skeleton>
+                <div v-else class="xp-project-role">
+                  {{ projectInfo && projectInfo.positionName ? projectInfo.positionName : "N/A" }}
+                </div>
               </div>
             </div>
-            <div class="xp-project-actions">
+
+            <!-- Các nút hành động -->
+            <div v-if="scopedProject.formMode === FORM_MODE.View" class="xp-project-actions">
               <Button
-                @click.stop=""
+                @click.stop="reloadData"
                 @mousedown.stop=""
                 size="small"
                 icon="pi pi-refresh"
@@ -41,19 +184,35 @@ const formMode = ref(FORM_MODE.View);
                 title="Tải lại"
               />
               <Button
-                @click.stop=""
+                @click.stop="onEdit"
                 @mousedown.stop=""
                 size="small"
-                icon="pi pi-cog"
+                icon="pi pi-pencil"
                 variant="text"
-                title="Cài đặt"
+                title="Chỉnh sửa"
               />
             </div>
           </div>
         </AccordionHeader>
         <AccordionContent>
-          <ViewProject v-if="formMode === FORM_MODE.View" />
-          <EditProject v-if="formMode === FORM_MODE.Edit" />
+          <EditProject
+            v-if="
+              scopedProject.formMode === FORM_MODE.Edit ||
+              scopedProject.formMode === FORM_MODE.Create
+            "
+            :initialValues="scopedProject"
+            :formMode="scopedProject.formMode"
+            @save="onSave"
+            @delete="onDelete"
+            @cancel="onCancel"
+          />
+          <ViewProject
+            v-else
+            ref="view-project-ref"
+            :project="scopedProject"
+            @loading="loading = $event"
+            @dataChange="projectInfo = $event"
+          />
         </AccordionContent>
       </AccordionPanel>
     </Accordion>
@@ -64,8 +223,8 @@ const formMode = ref(FORM_MODE.View);
 .xp-project-detail {
   width: 100%;
   box-shadow:
-    rgba(67, 71, 85, 0.27) 0px 0px 0.25em,
-    rgba(90, 125, 188, 0.05) 0px 0.25em 1em;
+    rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
+    rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
   border-radius: 12px;
   overflow: hidden;
   margin-top: 2px;
@@ -76,6 +235,13 @@ const formMode = ref(FORM_MODE.View);
     align-items: center;
     justify-content: space-between;
     padding-right: 8px;
+
+    .xp-employee-header-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
     .xp-project-info {
       display: flex;
       align-items: center;
@@ -99,5 +265,9 @@ const formMode = ref(FORM_MODE.View);
     .xp-project-actions {
     }
   }
+}
+
+.xp-project-detail + .xp-project-detail {
+  margin-top: 24px;
 }
 </style>

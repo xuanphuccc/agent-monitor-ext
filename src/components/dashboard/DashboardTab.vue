@@ -57,15 +57,13 @@ import Avatar from "primevue/avatar";
 <style lang="scss" scoped>
 .xp-dashboard-tab {
   width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  padding: 0px 12px;
+  padding: 0px 12px 12px;
 
   .xp-dashboard-panel {
     width: 100%;
     box-shadow:
-      rgba(67, 71, 85, 0.27) 0px 0px 0.25em,
-      rgba(90, 125, 188, 0.05) 0px 0.25em 1em;
+      rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
+      rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
     border-radius: 12px;
     overflow: hidden;
     margin-top: 2px;

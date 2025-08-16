@@ -1,13 +1,17 @@
 <script setup>
 import Knob from "primevue/knob";
 import DatePicker from "primevue/datepicker";
-import { ref, computed } from "vue";
+import Skeleton from "primevue/skeleton";
+import Popover from "primevue/popover";
+import { ref, computed, useTemplateRef, nextTick } from "vue";
 import { getAiAgentUsageByProject } from "@/services/reports-api";
 import { useToast } from "primevue/usetoast";
+import { getMonthlyUsageHistory } from "@/services/stats-api";
+import { getSettings } from "@/utils/common";
 
 const toast = useToast();
 
-const emit = defineEmits(["dataChange", "loading"]);
+const emit = defineEmits(["employeeInfo", "loading"]);
 const props = defineProps({
   employee: {
     type: Object,
@@ -28,67 +32,77 @@ const datePickerConfig = ref({
 });
 
 const loading = ref(false);
-const daylyUsageData = ref(null);
-const monthlyUsageData = ref(null);
+const dailyUsageData = ref(null);
+const monthlyUsageData = ref({});
+const selectedDate = ref(new Date());
+const userSettings = ref({});
+const popoverData = ref(null);
+const popoverRef = useTemplateRef("popover-ref");
 
 const kpiCompletionRate = computed(() => {
-  if (!daylyUsageData.value || !daylyUsageData.value.relevantToolsTotal) {
+  if (!dailyUsageData.value || !dailyUsageData.value.positionBasedRequests) {
     return 0;
   }
-  const rate = (daylyUsageData.value.relevantToolsTotal / 5) * 100;
+  const rate = (dailyUsageData.value.positionBasedRequests / 5) * 100;
   return Math.min(rate, 100);
 });
 
 const overviewUsageClass = computed(() => {
-  if (!daylyUsageData.value || !daylyUsageData.value.relevantToolsTotal) {
+  if (
+    !dailyUsageData.value ||
+    dailyUsageData.value.positionBasedRequests === null ||
+    dailyUsageData.value.positionBasedRequests === undefined
+  ) {
     return "usage-high";
   }
-  const usage = daylyUsageData.value.relevantToolsTotal;
-  if (usage < 5) {
+  const usage = dailyUsageData.value.positionBasedRequests;
+  if (usage < userSettings.value.minRequestCount) {
     return "usage-low";
   }
-  if (usage <= 15) {
+  if (usage <= 30) {
     return "usage-medium";
   }
-  if (usage <= 29) {
-    return "usage-high";
-  }
+  // if (usage <= 29) {
+  //   return "usage-high";
+  // }
   return "usage-very-high";
 });
 
 const knobColor = computed(() => {
-  if (!daylyUsageData.value || !daylyUsageData.value.relevantToolsTotal) {
+  if (
+    !dailyUsageData.value ||
+    dailyUsageData.value.positionBasedRequests === null ||
+    dailyUsageData.value.positionBasedRequests === undefined
+  ) {
     return "#358ffa";
   }
-  const usage = daylyUsageData.value.relevantToolsTotal;
+  const usage = dailyUsageData.value.positionBasedRequests;
+
   // If usage is less than 5, use red color
-  if (usage < 5) {
+  if (usage < userSettings.value.minRequestCount) {
     return "#fa3535";
   }
   // If usage is between 5 and 15, use green color
-  if (usage <= 15) {
+  if (usage <= 30) {
     return "#28b998";
   }
-  // If usage is between 16 and 29, use blue color
-  if (usage <= 29) {
-    return "#358ffa";
-  }
+  // // If usage is between 16 and 29, use blue color
+  // if (usage <= 29) {
+  //   return "#358ffa";
+  // }
   // If usage is 30 or more, use purple color
   return "#8b5cf6";
 });
 
 /**
- * Hàm khởi tạo dữ liệu ban đầu
+ * Lấy dữ liệu sử dụng hàng ngày của nhân viên theo dự án
  */
-const initData = async () => {
+const getDaylyUsageData = async () => {
   try {
     // Kiểm tra xem có dữ liệu nhân viên không
     if (!props.employee) {
       return;
     }
-
-    loading.value = true;
-    emit("loading", true);
 
     const currentDate = new Date();
     const currentDay = currentDate.getDate();
@@ -98,17 +112,13 @@ const initData = async () => {
     const startDate = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(currentDay).padStart(2, "0")}T00:00:00`;
     const endDate = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(currentDay).padStart(2, "0")}T23:59:59`;
 
-    const projectDaylyUsageData = await getAiAgentUsageByProject(
-      props.employee.projectName,
-      startDate,
-      endDate,
-    );
-    if (projectDaylyUsageData && projectDaylyUsageData.data && projectDaylyUsageData.data.success) {
-      const usageDataList = projectDaylyUsageData.data.data || [];
+    const response = await getAiAgentUsageByProject(props.employee.projectName, startDate, endDate);
+    if (response && response.data && response.data.success) {
+      const usageDataList = response.data.data || [];
       const employeeUsage =
         usageDataList.find((usage) => usage.employeeCode === props.employee.employeeCode) || null;
       if (employeeUsage) {
-        daylyUsageData.value = employeeUsage;
+        dailyUsageData.value = employeeUsage;
         emit("dataChange", employeeUsage);
       } else {
         toast.add({
@@ -124,6 +134,98 @@ const initData = async () => {
         life: 3000,
       });
     }
+  } catch (error) {
+    console.error("Error initializing dayly data:", error);
+  }
+};
+
+/**
+ * Lấy dữ liệu sử dụng hàng tháng của nhân viên
+ */
+const getMonthlyUsageData = async () => {
+  try {
+    // Kiểm tra xem có dữ liệu nhân viên không
+    if (!props.employee) {
+      return;
+    }
+
+    monthlyUsageData.value = {};
+
+    const selectedMonth = selectedDate.value.getMonth() + 1;
+    const selectedYear = selectedDate.value.getFullYear();
+    console.log("Selected Month:", selectedMonth, "Selected Year:", selectedYear);
+
+    const currentDate = new Date();
+    const currentDay = currentDate.getDate();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+
+    const response = await getMonthlyUsageHistory(
+      selectedMonth,
+      selectedYear,
+      props.employee.employeeCode,
+    );
+    if (response && response.data && response.data.success) {
+      const responseData = response.data.data;
+      const dailyUsages = responseData?.dailyUsage || [];
+      emit("employeeInfo", responseData?.employeeInfo);
+
+      const scopedMonthlyUsageData = {};
+      dailyUsages.forEach((usage) => {
+        // Lấy dữ liệu của ngày hiện tại
+        if (
+          usage.date ===
+          `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(currentDay).padStart(2, "0")}`
+        ) {
+          dailyUsageData.value = usage;
+        }
+
+        const dateKey = usage.day;
+        let indicatorColor = "#fa3535"; // Default color
+
+        if (usage.positionBasedRequests < userSettings.value.minRequestCount) {
+          indicatorColor = "#fa3535"; // Red
+        } else if (usage.positionBasedRequests <= 30) {
+          indicatorColor = "#28b998"; // Green
+        } else if (usage.positionBasedRequests > 30) {
+          indicatorColor = "#8b5cf6"; // Purple
+        }
+
+        scopedMonthlyUsageData[dateKey] = {
+          ...usage,
+          indicatorColor,
+        };
+      });
+
+      monthlyUsageData.value = scopedMonthlyUsageData;
+    } else {
+      toast.add({
+        severity: "error",
+        summary: "Lỗi khi lấy dữ liệu sử dụng hàng tháng.",
+        life: 3000,
+      });
+    }
+  } catch (error) {
+    console.error("Error initializing monthly data:", error);
+  }
+};
+
+/**
+ * Hàm khởi tạo dữ liệu ban đầu
+ */
+const initData = async () => {
+  try {
+    // Kiểm tra xem có dữ liệu nhân viên không
+    if (!props.employee) {
+      return;
+    }
+
+    loading.value = true;
+    emit("loading", true);
+
+    userSettings.value = getSettings();
+    // await getDaylyUsageData();
+    await getMonthlyUsageData();
 
     loading.value = false;
     emit("loading", false);
@@ -134,6 +236,45 @@ const initData = async () => {
   }
 };
 initData();
+
+/**
+ * Xử lý sự kiện khi chuyển tháng trong DatePicker
+ */
+const handleMonthChange = async (event) => {
+  loading.value = true;
+  emit("loading", true);
+
+  selectedDate.value = new Date(event.year, event.month - 1, 1);
+  await getMonthlyUsageData();
+
+  loading.value = false;
+  emit("loading", false);
+};
+
+/**
+ * Xử lý sự kiện khi chọn ngày trong DatePicker
+ */
+const handleDateSelect = (event, usageData) => {
+  try {
+    if (loading.value || !popoverRef.value) {
+      return;
+    }
+    console.log("Usage data:", usageData);
+
+    popoverRef.value.hide();
+
+    if (usageData && usageData.day !== popoverData.value?.day) {
+      popoverData.value = usageData;
+      nextTick(() => {
+        popoverRef.value.show(event);
+      });
+    } else {
+      popoverData.value = null;
+    }
+  } catch (error) {
+    console.log("Error selecting date:", error);
+  }
+};
 
 defineExpose({
   initData,
@@ -159,8 +300,8 @@ defineExpose({
             <div class="xp-overview-info-title">Số requests</div>
             <div class="xp-overview-info-value">
               {{
-                daylyUsageData && daylyUsageData.relevantToolsTotal
-                  ? daylyUsageData.relevantToolsTotal
+                dailyUsageData && dailyUsageData.positionBasedRequests
+                  ? dailyUsageData.positionBasedRequests
                   : 0
               }}
             </div>
@@ -170,33 +311,25 @@ defineExpose({
           <div class="xp-employee-detail-item">
             <span class="xp-employee-detail-label">Cline</span>
             <span class="xp-employee-detail-value">{{
-              daylyUsageData && daylyUsageData.clineTotalRequests
-                ? daylyUsageData.clineTotalRequests
-                : 0
+              dailyUsageData && dailyUsageData.clineRequests ? dailyUsageData.clineRequests : 0
             }}</span>
           </div>
           <div class="xp-employee-detail-item">
             <span class="xp-employee-detail-label">Cursor</span>
             <span class="xp-employee-detail-value">{{
-              daylyUsageData && daylyUsageData.cursorTotalRequests
-                ? daylyUsageData.cursorTotalRequests
-                : 0
+              dailyUsageData && dailyUsageData.cursorRequests ? dailyUsageData.cursorRequests : 0
             }}</span>
           </div>
           <div class="xp-employee-detail-item">
             <span class="xp-employee-detail-label">OneAI</span>
             <span class="xp-employee-detail-value">{{
-              daylyUsageData && daylyUsageData.oneAiTotalRequests
-                ? daylyUsageData.oneAiTotalRequests
-                : 0
+              dailyUsageData && dailyUsageData.oneAiRequests ? dailyUsageData.oneAiRequests : 0
             }}</span>
           </div>
           <div class="xp-employee-detail-item">
             <span class="xp-employee-detail-label">AI Agents</span>
             <span class="xp-employee-detail-value">{{
-              daylyUsageData && daylyUsageData.aiAgentTotalRequests
-                ? daylyUsageData.aiAgentTotalRequests
-                : 0
+              dailyUsageData && dailyUsageData.aiAgentRequests ? dailyUsageData.aiAgentRequests : 0
             }}</span>
           </div>
         </div>
@@ -206,23 +339,66 @@ defineExpose({
     <div class="xp-view-section">
       <div class="xp-view-section-title">Tháng này</div>
       <div class="xp-view-section-content">
-        <DatePicker inline class="xp-date-picker" :dt="datePickerConfig">
+        <DatePicker
+          v-model="selectedDate"
+          @month-change="handleMonthChange"
+          inline
+          class="xp-date-picker"
+          :dt="datePickerConfig"
+        >
           <template #date="slotProps">
-            <div class="xp-datepicker-day-content">
+            <Skeleton v-if="loading" size="28px" />
+            <div
+              v-else
+              @click="handleDateSelect($event, monthlyUsageData[slotProps.date.day])"
+              class="xp-datepicker-day-content"
+            >
               <div class="xp-datepicker-day">
                 <div
                   v-if="slotProps.date.selectable"
                   class="xp-datepicker-indicator"
-                  :style="{ background: '#358ffa' }"
+                  :style="{
+                    background: monthlyUsageData[slotProps.date.day]
+                      ? monthlyUsageData[slotProps.date.day].indicatorColor
+                      : 'transparent',
+                  }"
                 ></div>
                 <div class="xp-datepicker-day-number">{{ slotProps.date.day }}</div>
               </div>
               <div class="xp-datepicker-total-requests">
-                {{ slotProps.date.selectable ? "12" : "" }}
+                <template v-if="slotProps.date.selectable">
+                  {{
+                    monthlyUsageData[slotProps.date.day]
+                      ? monthlyUsageData[slotProps.date.day].positionBasedRequests
+                      : 0
+                  }}
+                </template>
               </div>
             </div>
           </template>
         </DatePicker>
+
+        <!-- Popover xem chi tiết ngày trên DatePicker -->
+        <Popover ref="popover-ref">
+          <div class="xp-daily-details">
+            <div class="xp-daily-detail-item">
+              <span class="xp-daily-detail-label">Cline</span>
+              <span class="xp-daily-detail-value">{{ popoverData.clineRequests }}</span>
+            </div>
+            <div class="xp-daily-detail-item">
+              <span class="xp-daily-detail-label">Cursor</span>
+              <span class="xp-daily-detail-value">{{ popoverData.cursorRequests }}</span>
+            </div>
+            <div class="xp-daily-detail-item">
+              <span class="xp-daily-detail-label">OneAI</span>
+              <span class="xp-daily-detail-value">{{ popoverData.oneAiRequests }}</span>
+            </div>
+            <div class="xp-daily-detail-item">
+              <span class="xp-daily-detail-label">AI Agents</span>
+              <span class="xp-daily-detail-value">{{ popoverData.aiAgentRequests }}</span>
+            </div>
+          </div>
+        </Popover>
       </div>
     </div>
   </div>
@@ -325,7 +501,7 @@ defineExpose({
         padding: 2px;
         display: flex;
         flex-direction: column;
-        // justify-content: ;
+        user-select: none;
         .xp-datepicker-day {
           display: flex;
           align-items: center;
@@ -357,6 +533,29 @@ defineExpose({
 
   .xp-view-section + .xp-view-section {
     margin-top: 24px;
+  }
+}
+.xp-daily-details {
+  width: 120px;
+  .xp-daily-detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .xp-daily-detail-label {
+      font-size: 14px;
+      line-height: 18px;
+    }
+
+    .xp-daily-detail-value {
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 18px;
+      color: var(--color-text);
+    }
+  }
+
+  .xp-daily-detail-item + .xp-daily-detail-item {
+    margin-top: 8px;
   }
 }
 </style>

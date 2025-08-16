@@ -50,12 +50,23 @@ const showSetting = ref(false);
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
+  overflow-y: auto;
 
   .xp-header {
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 12px 12px;
+    padding: 12px;
+    backdrop-filter: blur(8px);
+    background-color: rgba(255, 255, 255, 0.1);
+    // border-bottom: 1px solid #efefef;
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
   }
 }
 </style>

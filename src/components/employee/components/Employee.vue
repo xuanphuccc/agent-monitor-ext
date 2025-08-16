@@ -125,15 +125,32 @@ const reloadData = () => {
 
 <template>
   <div class="xp-employee-detail">
-    <Accordion v-model:value="isExpand">
+    <Accordion
+      v-model:value="isExpand"
+      :dt="{
+        panel: { border: { width: '0px' } },
+      }"
+    >
       <AccordionPanel value="1">
         <AccordionHeader>
           <div class="xp-employee-header">
+            <!-- Title khi thêm mới/chỉnh sửa -->
+            <div
+              v-if="
+                scopedEmployee.formMode === FORM_MODE.Create ||
+                scopedEmployee.formMode === FORM_MODE.Edit
+              "
+              class="xp-employee-header-title"
+            >
+              {{ scopedEmployee.formMode === FORM_MODE.Create ? "Thêm mới" : "Chỉnh sửa" }}
+            </div>
+
+            <!-- Hiển thị thông tin nhân viên khi ở chế độ xem -->
             <div v-if="scopedEmployee.formMode === FORM_MODE.View" class="xp-employee-info">
               <Skeleton v-if="loading" shape="circle" size="28px" class="mr-2"></Skeleton>
               <Avatar
                 v-else
-                :label="getAvatarLetter(employeeInfo?.employeeName)"
+                :label="getAvatarLetter(employeeInfo?.EmployeeName)"
                 class="mr-2"
                 style="background-color: #dee9fc; color: #1a2551"
                 shape="circle"
@@ -142,7 +159,7 @@ const reloadData = () => {
                 <Skeleton v-if="loading" width="120px" height="14px"></Skeleton>
                 <div v-else class="xp-employee-name">
                   {{
-                    employeeInfo && employeeInfo.employeeName ? employeeInfo.employeeName : "N/A"
+                    employeeInfo && employeeInfo.EmployeeName ? employeeInfo.EmployeeName : "N/A"
                   }}
                 </div>
 
@@ -154,11 +171,13 @@ const reloadData = () => {
                 ></Skeleton>
                 <div v-else class="xp-employee-role">
                   {{
-                    employeeInfo && employeeInfo.positionName ? employeeInfo.positionName : "N/A"
+                    employeeInfo && employeeInfo.PositionName ? employeeInfo.PositionName : "N/A"
                   }}
                 </div>
               </div>
             </div>
+
+            <!-- Các nút hành động -->
             <div v-if="scopedEmployee.formMode === FORM_MODE.View" class="xp-employee-actions">
               <Button
                 @click.stop="reloadData"
@@ -172,9 +191,9 @@ const reloadData = () => {
                 @click.stop="onEdit"
                 @mousedown.stop=""
                 size="small"
-                icon="pi pi-cog"
+                icon="pi pi-pencil"
                 variant="text"
-                title="Cài đặt"
+                title="Chỉnh sửa"
               />
             </div>
           </div>
@@ -196,7 +215,7 @@ const reloadData = () => {
             ref="view-employee-ref"
             :employee="scopedEmployee"
             @loading="loading = $event"
-            @dataChange="employeeInfo = $event"
+            @employeeInfo="employeeInfo = $event"
           />
         </AccordionContent>
       </AccordionPanel>
@@ -208,8 +227,8 @@ const reloadData = () => {
 .xp-employee-detail {
   width: 100%;
   box-shadow:
-    rgba(67, 71, 85, 0.27) 0px 0px 0.25em,
-    rgba(90, 125, 188, 0.05) 0px 0.25em 1em;
+    rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
+    rgba(0, 0, 0, 0.06) 0px 1px 2px 0px;
   border-radius: 12px;
   overflow: hidden;
   margin-top: 2px;
@@ -220,6 +239,13 @@ const reloadData = () => {
     align-items: center;
     justify-content: space-between;
     padding-right: 8px;
+
+    .xp-employee-header-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
     .xp-employee-info {
       display: flex;
       align-items: center;

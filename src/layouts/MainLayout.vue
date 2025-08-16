@@ -85,9 +85,9 @@ import Button from "primevue/button";
   }
 
   .xp-content {
-    flex: 1;
-    padding: 12px 0;
-    overflow-y: auto;
+    height: calc(100% - 52px);
+    padding: 0;
+    overflow-y: hidden;
     background-color: var(--color-background);
   }
 }
