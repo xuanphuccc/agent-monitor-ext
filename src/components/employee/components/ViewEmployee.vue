@@ -229,7 +229,7 @@ const initData = async () => {
     popoverData.value = null;
 
     // Lấy cài đặt người dùng
-    userSettings.value = getSettings();
+    userSettings.value = await getSettings();
 
     // Lấy dữ liệu sử dụng hàng ngày
     await getMonthlyUsageData();

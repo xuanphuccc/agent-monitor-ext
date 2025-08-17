@@ -32,6 +32,7 @@ const showSetting = ref(false);
             :options="options"
             :allowEmpty="false"
             size="small"
+            fluid
           />
         </div>
 
