@@ -11,7 +11,7 @@ import ViewEmployee from "@/components/employee/components/ViewEmployee.vue";
 import EditEmployee from "@/components/employee/components/EditEmployee.vue";
 import { ref, useTemplateRef } from "vue";
 import { FORM_MODE } from "@/enums/xp-enum";
-import { getAvatarLetter, getLocalStorage, setLocalStorage } from "@/utils/common";
+import { getAvatarLetter, getFromStorage, saveToStorage } from "@/utils/common";
 
 const toast = useToast();
 const emit = defineEmits(["cancel", "delete", "save"]);
@@ -63,10 +63,10 @@ const onCancel = () => {
 /**
  * Hàm xử lý sự kiện khi nhấn nút "Xoá"
  */
-const onDelete = () => {
-  const localEmployees = getLocalStorage("employeeList") || [];
+const onDelete = async () => {
+  const localEmployees = (await getFromStorage("employeeList")) || [];
   const updatedEmployees = localEmployees.filter((emp) => emp.id !== props.employee.id);
-  setLocalStorage("employeeList", updatedEmployees);
+  await saveToStorage("employeeList", updatedEmployees);
 
   emit("delete", props.employee.id);
 

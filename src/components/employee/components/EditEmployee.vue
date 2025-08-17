@@ -8,7 +8,7 @@ import { z } from "zod";
 import { useToast } from "primevue/usetoast";
 import { ref } from "vue";
 import { FORM_MODE } from "@/enums/xp-enum";
-import { getLocalStorage, setLocalStorage } from "@/utils/common";
+import { getFromStorage, saveToStorage } from "@/utils/common";
 
 const emit = defineEmits(["cancel", "delete", "save"]);
 const props = defineProps({
@@ -48,7 +48,7 @@ initFormValues();
  * Xử lý sự kiện khi form được submit
  * @param {Object} form - Dữ liệu của form
  */
-const onFormSubmit = (form) => {
+const onFormSubmit = async (form) => {
   try {
     if (form.valid) {
       const formValues = {
@@ -56,7 +56,7 @@ const onFormSubmit = (form) => {
         id: props.initialValues.id || null, // Giữ nguyên ID nếu có, hoặc tạo mới nếu không có
       };
 
-      const localEmployees = getLocalStorage("employeeList") || [];
+      const localEmployees = (await getFromStorage("employeeList")) || [];
       const existingIndex = localEmployees.findIndex((emp) => emp.id === formValues.id);
       if (existingIndex !== -1) {
         // Cập nhật nhân viên đã tồn tại
@@ -67,7 +67,7 @@ const onFormSubmit = (form) => {
         localEmployees.push(formValues);
       }
 
-      setLocalStorage("employeeList", localEmployees);
+      await saveToStorage("employeeList", localEmployees);
       emit("save", formValues);
 
       toast.add({ severity: "success", summary: "Lưu dữ liệu thành công.", life: 3000 });

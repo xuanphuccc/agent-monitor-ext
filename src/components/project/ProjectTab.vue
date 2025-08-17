@@ -3,7 +3,7 @@ import Project from "@/components/project/components/Project.vue";
 import Button from "primevue/button";
 import { ref } from "vue";
 import { FORM_MODE } from "@/enums/xp-enum";
-import { getLocalStorage } from "@/utils/common";
+import { getFromStorage } from "@/utils/common";
 import { v4 as uuidv4 } from "uuid";
 
 const projectList = ref([]);
@@ -13,7 +13,7 @@ const projectList = ref([]);
  */
 const initData = async () => {
   try {
-    const localProjects = getLocalStorage("projectList") || [];
+    const localProjects = (await getFromStorage("projectList")) || [];
 
     projectList.value = localProjects.map((project) => ({
       ...project,

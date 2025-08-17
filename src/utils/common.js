@@ -1,23 +1,23 @@
 /**
- * Lấy giá trị từ localStorage
+ * Lấy giá trị từ chrome.storage.local
  * @param {string} key - Tên khóa để lấy giá trị
- * @returns {*} - Giá trị đã lưu trong localStorage, hoặc null nếu không có
+ * @returns {Promise<*>} - Promise trả về giá trị đã lưu, hoặc null nếu không có
  */
-export const getLocalStorage = (key) => {
-  const value = localStorage.getItem(key);
-  return value ? JSON.parse(value) : null;
+export const getFromStorage = async (key) => {
+  const result = await chrome.storage.local.get(key);
+  return result[key] || null;
 };
 
 /**
- * Lưu giá trị vào localStorage
+ * Lưu giá trị vào chrome.storage.local
  * @param {string} key - Tên khóa để lưu giá trị
  * @param {*} value - Giá trị cần lưu
  */
-export const setLocalStorage = (key, value) => {
+export const saveToStorage = async (key, value) => {
   if (value === undefined || value === null) {
-    localStorage.removeItem(key);
+    await chrome.storage.local.remove(key);
   } else {
-    localStorage.setItem(key, JSON.stringify(value));
+    await chrome.storage.local.set({ [key]: value });
   }
 };
 
@@ -64,7 +64,7 @@ export const getSettings = async () => {
     quickViewRequests: true,
     kpiAlert: true,
     minRequestCount: 5,
-    notificationTime: { hours: 8, minutes: 0 }, // Mặc định là 08:00
+    notificationTime: { hours: 16, minutes: 30 }, // Mặc định là 16:30
   };
 
   const savedSettings = data.settings || {};

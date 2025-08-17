@@ -1,4 +1,5 @@
-import { getOverallAiAgentUsage } from "@/services/reports-api";
+import { getFromStorage } from "@/utils/common";
+import { getMonthlyUsageHistory } from "@/services/stats-api";
 
 const KPI_CHECK_ALARM_NAME = "kpiCheckAlarm";
 
@@ -66,8 +67,45 @@ const performKpiCheck = async () => {
   }
 
   try {
-    // const data = await getOverallAiAgentUsage();
-    const totalRequests = 2;
+    // Lấy danh sách nhân viên từ storage
+    const employeeList = (await getFromStorage("employeeList")) || [];
+    if (employeeList.length === 0) {
+      console.log("No employees found. Skipping KPI check.");
+      return;
+    }
+
+    // Lấy nhân viên đầu tiên
+    const firstEmployee = employeeList[0];
+
+    // Lấy ngày tháng hiện tại
+    const currentDate = new Date();
+    const currentDay = currentDate.getDate();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+
+    // Gọi API để lấy lịch sử sử dụng
+    const response = await getMonthlyUsageHistory(
+      currentMonth,
+      currentYear,
+      firstEmployee.employeeCode,
+    );
+
+    let totalRequests = 0;
+    if (response && response.data && response.data.success) {
+      const dailyUsages = response.data.data?.dailyUsage || [];
+      const todayUsage = dailyUsages.find(
+        (usage) =>
+          usage.date ===
+          `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(currentDay).padStart(
+            2,
+            "0",
+          )}`,
+      );
+
+      if (todayUsage) {
+        totalRequests = todayUsage.positionBasedRequests;
+      }
+    }
 
     if (totalRequests < settings.minRequestCount) {
       chrome.notifications.create({

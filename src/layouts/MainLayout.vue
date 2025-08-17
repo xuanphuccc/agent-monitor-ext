@@ -1,5 +1,9 @@
 <script setup>
 import Button from "primevue/button";
+
+const handleClose = () => {
+  window.close();
+};
 </script>
 
 <template>
@@ -30,7 +34,13 @@ import Button from "primevue/button";
           variant="text"
           title="Cài đặt"
         />
-        <Button @click.stop="" size="small" icon="pi pi-times" variant="text" title="Đóng" />
+        <Button
+          @click.stop="handleClose"
+          size="small"
+          icon="pi pi-times"
+          variant="text"
+          title="Đóng"
+        />
       </div>
     </div>
 

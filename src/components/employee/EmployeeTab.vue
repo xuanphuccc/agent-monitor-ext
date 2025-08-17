@@ -3,7 +3,7 @@ import Employee from "@/components/employee/components/Employee.vue";
 import Button from "primevue/button";
 import { ref } from "vue";
 import { FORM_MODE } from "@/enums/xp-enum";
-import { getLocalStorage } from "@/utils/common";
+import { getFromStorage } from "@/utils/common";
 import { v4 as uuidv4 } from "uuid";
 
 const employeeList = ref([]);
@@ -13,7 +13,7 @@ const employeeList = ref([]);
  */
 const initData = async () => {
   try {
-    const localEmployees = getLocalStorage("employeeList") || [];
+    const localEmployees = (await getFromStorage("employeeList")) || [];
 
     employeeList.value = localEmployees.map((employee) => ({
       ...employee,

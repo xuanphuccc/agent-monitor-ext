@@ -11,7 +11,7 @@ import ViewProject from "@/components/project/components/ViewProject.vue";
 import EditProject from "@/components/project/components/EditProject.vue";
 import { ref, useTemplateRef } from "vue";
 import { FORM_MODE } from "@/enums/xp-enum";
-import { getAvatarLetter, getLocalStorage, setLocalStorage } from "@/utils/common";
+import { getAvatarLetter, getFromStorage, saveToStorage } from "@/utils/common";
 
 const toast = useToast();
 const emit = defineEmits(["cancel", "delete", "save"]);
@@ -63,10 +63,10 @@ const onCancel = () => {
 /**
  * Hàm xử lý sự kiện khi nhấn nút "Xoá"
  */
-const onDelete = () => {
-  const localProjects = getLocalStorage("projectList") || [];
+const onDelete = async () => {
+  const localProjects = (await getFromStorage("projectList")) || [];
   const updatedProjects = localProjects.filter((proj) => proj.id !== props.project.id);
-  setLocalStorage("projectList", updatedProjects);
+  await saveToStorage("projectList", updatedProjects);
 
   emit("delete", props.project.id);
 
