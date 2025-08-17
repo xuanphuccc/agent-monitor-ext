@@ -115,10 +115,4 @@ app.use(PrimeVue, {
 });
 app.use(ToastService);
 
-// Bước này quan trọng: chạy MSW nếu đang ở môi trường phát triển
-if (import.meta.env.DEV) {
-  const { worker } = await import("./services/mocks/browser.js");
-  await worker.start();
-}
-
 app.mount("#app");

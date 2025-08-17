@@ -8,19 +8,21 @@ import Button from "primevue/button";
       <div class="xp-logo">
         <div class="xp-logo-img">
           <svg
-            xmlns="http://www.w3.org/2000/svg"
             width="24"
             height="24"
-            fill="none"
             viewBox="0 0 40 40"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
           >
             <path
-              fill="#020617"
-              d="M20 0c11.046 0 20 8.954 20 20v14a6 6 0 0 1-6 6H21v-8.774c0-2.002.122-4.076 1.172-5.78a10 10 0 0 1 6.904-4.627l.383-.062a.8.8 0 0 0 0-1.514l-.383-.062a10 10 0 0 1-8.257-8.257l-.062-.383a.8.8 0 0 0-1.514 0l-.062.383a9.999 9.999 0 0 1-4.627 6.904C12.85 18.878 10.776 19 8.774 19H.024C.547 8.419 9.29 0 20 0Z"
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M20 0C27.4768 0 31.2154 -0.000204921 34 1.60742C35.8242 2.66064 37.3394 4.17577 38.3926 6C40.0002 8.7846 40 12.5232 40 20C40 27.4768 40.0002 31.2154 38.3926 34C37.3394 35.8242 35.8242 37.3394 34 38.3926C31.2154 40.0002 27.4768 40 20 40C12.5232 40 8.7846 40.0002 6 38.3926C4.17577 37.3394 2.66064 35.8242 1.60742 34C-0.000204921 31.2154 0 27.4768 0 20C0 12.5232 -0.000204921 8.7846 1.60742 6C2.66064 4.17577 4.17577 2.66064 6 1.60742C8.7846 -0.000204921 12.5232 0 20 0ZM22 4C13.1634 4 6 11.1634 6 20C6 28.8366 13.1634 36 22 36C30.8366 36 38 28.8366 38 20C38 11.1634 30.8366 4 22 4Z"
+              fill="#1f4de7"
             ></path>
             <path
-              fill="#020617"
-              d="M0 21h8.774c2.002 0 4.076.122 5.78 1.172a10.02 10.02 0 0 1 3.274 3.274C18.878 27.15 19 29.224 19 31.226V40H6a6 6 0 0 1-6-6V21ZM40 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"
+              d="M36 20C36 25.5228 31.5228 30 26 30C20.4772 30 16 25.5228 16 20C16 14.4772 20.4772 10 26 10C31.5228 10 36 14.4772 36 20Z"
+              fill="#1f4de7"
             ></path>
           </svg>
         </div>
@@ -50,10 +52,10 @@ import Button from "primevue/button";
   flex-direction: column;
   width: 100%;
   height: 100%;
-  border: 1px solid var(--color-border);
+  // border: 1px solid var(--color-border);
 
   .xp-header {
-    height: 52px;
+    height: 48px;
     width: 100%;
     padding: 0 12px;
     display: flex;
@@ -85,7 +87,7 @@ import Button from "primevue/button";
   }
 
   .xp-content {
-    height: calc(100% - 52px);
+    height: calc(100% - 48px);
     padding: 0;
     overflow-y: hidden;
     background-color: var(--color-background);

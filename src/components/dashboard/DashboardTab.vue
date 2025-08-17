@@ -214,7 +214,7 @@ initData();
   }
 
   .xp-dashboard-panel + .xp-dashboard-panel {
-    margin-top: 16px;
+    margin-top: 24px;
   }
 
   .xp-ranking-item {
