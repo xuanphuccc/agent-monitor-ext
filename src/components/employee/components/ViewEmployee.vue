@@ -153,7 +153,6 @@ const getMonthlyUsageData = async () => {
 
     const selectedMonth = selectedDate.value.getMonth() + 1;
     const selectedYear = selectedDate.value.getFullYear();
-    console.log("Selected Month:", selectedMonth, "Selected Year:", selectedYear);
 
     const currentDate = new Date();
     const currentDay = currentDate.getDate();
@@ -223,8 +222,16 @@ const initData = async () => {
     loading.value = true;
     emit("loading", true);
 
+    // Reset data
+    dailyUsageData.value = null;
+    monthlyUsageData.value = {};
+    selectedDate.value = new Date();
+    popoverData.value = null;
+
+    // Lấy cài đặt người dùng
     userSettings.value = getSettings();
-    // await getDaylyUsageData();
+
+    // Lấy dữ liệu sử dụng hàng ngày
     await getMonthlyUsageData();
 
     loading.value = false;
@@ -408,9 +415,9 @@ defineExpose({
 .xp-view-employee {
   .xp-view-section {
     .xp-view-section-title {
-      font-weight: 700;
-      font-size: 16px;
-      line-height: 20px;
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 18px;
       color: var(--color-text);
     }
 

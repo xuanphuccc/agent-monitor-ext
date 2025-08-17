@@ -1,9 +1,0 @@
-{
-  "name": "AI Agent Monitor",
-  "version": "1.0.0",
-  "manifest_version": 3,
-  "permissions": ["activeTab", "scripting", "tabs", "storage", "notifications"],
-  "action": {
-    "default_popup": "index.html"
-  }
-}

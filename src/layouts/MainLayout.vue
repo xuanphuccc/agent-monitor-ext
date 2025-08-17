@@ -48,8 +48,8 @@ import Button from "primevue/button";
 .xp-main-layout {
   display: flex;
   flex-direction: column;
-  width: 380px;
-  height: 600px;
+  width: 100%;
+  height: 100%;
   border: 1px solid var(--color-border);
 
   .xp-header {

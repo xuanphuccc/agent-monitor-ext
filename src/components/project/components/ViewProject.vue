@@ -205,9 +205,9 @@ defineExpose({
 .xp-view-project {
   .xp-view-section {
     .xp-view-section-title {
-      font-weight: 700;
-      font-size: 16px;
-      line-height: 20px;
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 18px;
       color: var(--color-text);
     }
 

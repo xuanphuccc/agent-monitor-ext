@@ -60,3 +60,16 @@ export const getSettings = () => {
     }
   );
 };
+
+/**
+ * Hàm lấy ký tự đầu tiên của tên để làm avatar
+ * @param {string} fullName - Tên đầy đủ của nhân viên
+ */
+export const getAvatarLetter = (fullName) => {
+  if (!fullName || !fullName.trim()) {
+    return "N";
+  }
+  const nameParts = fullName.trim().split(" ");
+  const lastName = nameParts[nameParts.length - 1];
+  return lastName.charAt(0).toUpperCase();
+};

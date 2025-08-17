@@ -11,7 +11,7 @@ import ViewProject from "@/components/project/components/ViewProject.vue";
 import EditProject from "@/components/project/components/EditProject.vue";
 import { ref, useTemplateRef } from "vue";
 import { FORM_MODE } from "@/enums/xp-enum";
-import { getLocalStorage, setLocalStorage } from "@/utils/common";
+import { getAvatarLetter, getLocalStorage, setLocalStorage } from "@/utils/common";
 
 const toast = useToast();
 const emit = defineEmits(["cancel", "delete", "save"]);
@@ -101,19 +101,6 @@ const onEdit = () => {
 };
 
 /**
- * Hàm lấy ký tự đầu tiên của tên để làm avatar
- * @param {string} fullName - Tên đầy đủ của dự án
- */
-const getAvatarLetter = (fullName) => {
-  if (!fullName || !fullName.trim()) {
-    return "N";
-  }
-  const nameParts = fullName.trim().split(" ");
-  const lastName = nameParts[nameParts.length - 1];
-  return lastName.charAt(0).toUpperCase();
-};
-
-/**
  * Hàm nạp lại dữ liệu nhân viên
  */
 const reloadData = () => {
@@ -147,7 +134,7 @@ const reloadData = () => {
 
             <!-- Hiển thị thông tin dự án khi ở chế độ xem -->
             <div v-if="scopedProject.formMode === FORM_MODE.View" class="xp-project-info">
-              <Skeleton v-if="loading" shape="circle" size="28px" class="mr-2"></Skeleton>
+              <Skeleton v-if="loading" shape="circle" size="28px" class="mr-2" />
               <Avatar
                 v-else
                 :label="getAvatarLetter(projectInfo?.projectName)"
@@ -156,17 +143,12 @@ const reloadData = () => {
                 shape="circle"
               />
               <div class="xp-project-name-container">
-                <Skeleton v-if="loading" width="120px" height="14px"></Skeleton>
+                <Skeleton v-if="loading" width="120px" height="14px" />
                 <div v-else class="xp-project-name">
                   {{ projectInfo && projectInfo.projectName ? projectInfo.projectName : "N/A" }}
                 </div>
 
-                <Skeleton
-                  v-if="loading"
-                  width="100px"
-                  height="12px"
-                  style="margin-top: 6px"
-                ></Skeleton>
+                <Skeleton v-if="loading" width="100px" height="12px" style="margin-top: 6px" />
                 <div v-else class="xp-project-role">
                   {{ projectInfo && projectInfo.positionName ? projectInfo.positionName : "N/A" }}
                 </div>

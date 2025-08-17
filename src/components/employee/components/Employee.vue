@@ -11,7 +11,7 @@ import ViewEmployee from "@/components/employee/components/ViewEmployee.vue";
 import EditEmployee from "@/components/employee/components/EditEmployee.vue";
 import { ref, useTemplateRef } from "vue";
 import { FORM_MODE } from "@/enums/xp-enum";
-import { getLocalStorage, setLocalStorage } from "@/utils/common";
+import { getAvatarLetter, getLocalStorage, setLocalStorage } from "@/utils/common";
 
 const toast = useToast();
 const emit = defineEmits(["cancel", "delete", "save"]);
@@ -101,19 +101,6 @@ const onEdit = () => {
 };
 
 /**
- * Hàm lấy ký tự đầu tiên của tên để làm avatar
- * @param {string} fullName - Tên đầy đủ của nhân viên
- */
-const getAvatarLetter = (fullName) => {
-  if (!fullName || !fullName.trim()) {
-    return "N";
-  }
-  const nameParts = fullName.trim().split(" ");
-  const lastName = nameParts[nameParts.length - 1];
-  return lastName.charAt(0).toUpperCase();
-};
-
-/**
  * Hàm nạp lại dữ liệu nhân viên
  */
 const reloadData = () => {
@@ -147,7 +134,7 @@ const reloadData = () => {
 
             <!-- Hiển thị thông tin nhân viên khi ở chế độ xem -->
             <div v-if="scopedEmployee.formMode === FORM_MODE.View" class="xp-employee-info">
-              <Skeleton v-if="loading" shape="circle" size="28px" class="mr-2"></Skeleton>
+              <Skeleton v-if="loading" shape="circle" size="28px" class="mr-2" />
               <Avatar
                 v-else
                 :label="getAvatarLetter(employeeInfo?.EmployeeName)"
@@ -156,19 +143,14 @@ const reloadData = () => {
                 shape="circle"
               />
               <div class="xp-employee-name-container">
-                <Skeleton v-if="loading" width="120px" height="14px"></Skeleton>
+                <Skeleton v-if="loading" width="120px" height="14px" />
                 <div v-else class="xp-employee-name">
                   {{
                     employeeInfo && employeeInfo.EmployeeName ? employeeInfo.EmployeeName : "N/A"
                   }}
                 </div>
 
-                <Skeleton
-                  v-if="loading"
-                  width="100px"
-                  height="12px"
-                  style="margin-top: 6px"
-                ></Skeleton>
+                <Skeleton v-if="loading" width="100px" height="12px" style="margin-top: 6px" />
                 <div v-else class="xp-employee-role">
                   {{
                     employeeInfo && employeeInfo.PositionName ? employeeInfo.PositionName : "N/A"
