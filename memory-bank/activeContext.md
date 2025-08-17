@@ -1,8 +1,9 @@
 # Active Context
 
-I have completed a detailed analysis of the core tab components: `DashboardTab`, `EmployeeTab`, and `ProjectTab`.
+The KPI notification feature has been updated for better accuracy.
 
-- `DashboardTab` fetches and displays summary data from a remote API.
-- `EmployeeTab` and `ProjectTab` handle CRUD operations for their respective domains, persisting data to `localStorage`.
+- **Data Structure Change**: The `notificationTime` setting is no longer stored as an ISO string. It is now stored as an object `{ hours: number, minutes: number }` for more precise time handling and to avoid timezone-related issues.
+- **Utility Functions (`common.js`)**: The `saveSettings` and `getSettings` functions have been updated to handle the conversion between the `Date` object used by the UI's DatePicker and the new `{ hours, minutes }` storage format.
+- **Background Script (`background.js`)**: The alarm scheduling logic has been simplified. It now directly uses the `hours` and `minutes` from the settings to create the alarm, making the implementation more robust.
 
-The `systemPatterns.md` file has been updated to reflect these findings. The memory bank is now up-to-date with the application's current architecture and data management patterns. The next step is to wait for further instructions.
+The core functionality is complete and improved. The next step is to verify the feature and wait for further instructions.

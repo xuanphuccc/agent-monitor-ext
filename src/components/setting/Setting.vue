@@ -3,7 +3,7 @@ import Button from "primevue/button";
 import ToggleSwitch from "primevue/toggleswitch";
 import InputNumber from "primevue/inputnumber";
 import DatePicker from "primevue/datepicker";
-import { onBeforeUnmount, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { saveSettings, getSettings } from "@/utils/common";
 
 const settingConfigs = ref([
@@ -77,25 +77,26 @@ const settingValues = ref({
 
 /**
  * Hàm khởi tạo dữ liệu cài đặt
- * Lấy dữ liệu từ localStorage nếu có, nếu không thì sử dụng giá trị mặc định
+ * Lấy dữ liệu từ chrome.storage.local
  * @returns {void}
  */
-const initData = () => {
-  const savedSettings = getSettings() || {};
-  settingValues.value = {
-    quickViewRequests: savedSettings.quickViewRequests ?? true,
-    kpiAlert: savedSettings.kpiAlert ?? true,
-    minRequestCount: savedSettings.minRequestCount ?? 5,
-    notificationTime: savedSettings.notificationTime
-      ? new Date(savedSettings.notificationTime)
-      : new Date(),
-  };
+const initData = async () => {
+  const savedSettings = await getSettings();
+  settingValues.value = savedSettings;
 };
-initData();
 
-onBeforeUnmount(() => {
-  saveSettings(settingValues.value);
+onMounted(() => {
+  initData();
 });
+
+// Theo dõi sự thay đổi của settingValues và lưu lại khi có thay đổi
+watch(
+  settingValues,
+  (newSettings) => {
+    saveSettings(newSettings);
+  },
+  { deep: true }, // Sử dụng deep watch để theo dõi các thuộc tính lồng nhau của object
+);
 </script>
 <template>
   <div class="xp-setting">
