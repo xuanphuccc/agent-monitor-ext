@@ -1,1 +1,1 @@
-console.log("✅ Content script injected:", window.location.href);
+// console.log("✅ Content script injected:", window.location.href);

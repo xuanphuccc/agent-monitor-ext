@@ -95,51 +95,6 @@ const knobColor = computed(() => {
 });
 
 /**
- * Lấy dữ liệu sử dụng hàng ngày của nhân viên theo dự án
- */
-const getDaylyUsageData = async () => {
-  try {
-    // Kiểm tra xem có dữ liệu nhân viên không
-    if (!props.employee) {
-      return;
-    }
-
-    const currentDate = new Date();
-    const currentDay = currentDate.getDate();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
-
-    const startDate = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(currentDay).padStart(2, "0")}T00:00:00`;
-    const endDate = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(currentDay).padStart(2, "0")}T23:59:59`;
-
-    const response = await getAiAgentUsageByProject(props.employee.projectName, startDate, endDate);
-    if (response && response.data && response.data.success) {
-      const usageDataList = response.data.data || [];
-      const employeeUsage =
-        usageDataList.find((usage) => usage.employeeCode === props.employee.employeeCode) || null;
-      if (employeeUsage) {
-        dailyUsageData.value = employeeUsage;
-        emit("dataChange", employeeUsage);
-      } else {
-        toast.add({
-          severity: "error",
-          summary: `Nhân viên ${props.employee.employeeCode} không tồn tại.`,
-          life: 3000,
-        });
-      }
-    } else {
-      toast.add({
-        severity: "error",
-        summary: "Lỗi khi lấy dữ liệu sử dụng hàng ngày.",
-        life: 3000,
-      });
-    }
-  } catch (error) {
-    console.error("Error initializing dayly data:", error);
-  }
-};
-
-/**
  * Lấy dữ liệu sử dụng hàng tháng của nhân viên
  */
 const getMonthlyUsageData = async () => {
@@ -266,7 +221,6 @@ const handleDateSelect = (event, usageData) => {
     if (loading.value || !popoverRef.value) {
       return;
     }
-    console.log("Usage data:", usageData);
 
     popoverRef.value.hide();
 
@@ -279,7 +233,7 @@ const handleDateSelect = (event, usageData) => {
       popoverData.value = null;
     }
   } catch (error) {
-    console.log("Error selecting date:", error);
+    console.error("Error selecting date:", error);
   }
 };
 

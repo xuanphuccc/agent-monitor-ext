@@ -58,7 +58,7 @@ const settingConfigs = ref([
       },
       {
         icon: null,
-        title: "Tác giả",
+        title: "Nhà cung cấp",
         description: null,
         type: "text",
         field: "author",
