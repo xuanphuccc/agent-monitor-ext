@@ -80,7 +80,7 @@ initData();
               </div>
               <Avatar
                 :label="getAvatarLetter(user.employeeName)"
-                class="mr-2"
+                class="mr-2 flex-shrink-0"
                 style="background-color: #dee9fc; color: #1a2551"
                 shape="circle"
               />
@@ -147,7 +147,7 @@ initData();
               </div>
               <Avatar
                 :label="getAvatarLetter(project.projectName)"
-                class="mr-2"
+                class="mr-2 flex-shrink-0"
                 style="background-color: #dee9fc; color: #1a2551"
                 shape="circle"
               />
@@ -196,6 +196,7 @@ initData();
     margin-top: 2px;
     padding: 12px;
     .xp-view-section {
+      width: 100%;
       .xp-view-section-title {
         font-weight: 600;
         font-size: 14px;
@@ -205,6 +206,7 @@ initData();
 
       .xp-view-section-content {
         padding-top: 16px;
+        width: 100%;
       }
     }
 
@@ -218,12 +220,15 @@ initData();
   }
 
   .xp-ranking-item {
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 8px 0;
+    column-gap: 8px;
 
     .xp-ranking-left {
+      flex: 1;
       display: flex;
       align-items: center;
       gap: 16px;
@@ -252,6 +257,10 @@ initData();
           font-size: 11px;
           line-height: 14px;
           color: var(--color-text-secondary);
+          // white-space: nowrap;
+          // overflow: hidden;
+          // text-overflow: ellipsis;
+          // max-width: 100%;
         }
       }
     }
@@ -264,7 +273,12 @@ initData();
       background: #f8fafc;
       padding: 4px 8px;
       border-radius: 8px;
+      white-space: nowrap;
     }
   }
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
 }
 </style>

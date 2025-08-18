@@ -1,6 +1,6 @@
 {
-  "name": "xp-aiagent-monitor",
-  "version": "1.0.0",
+  "name": "ms-aiagent-monitor",
+  "version": "1.0.4",
   "author": "@xuanphucc",
   "description": "AI Agent Monitor Chrome Extension",
   "private": false,

@@ -460,6 +460,7 @@ defineExpose({
         width: 100%;
         height: 100%;
         padding: 2px;
+        border-radius: 6px;
         display: flex;
         flex-direction: column;
         user-select: none;

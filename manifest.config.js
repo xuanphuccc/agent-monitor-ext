@@ -35,4 +35,7 @@ export default defineManifest({
       js: ["src/content/content.js"],
     },
   ],
+
+  // Cho phép extension truy cập vào tất cả các URL
+  host_permissions: ["<all_urls>"],
 });

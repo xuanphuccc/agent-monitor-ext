@@ -12,6 +12,8 @@ const axiosClient = axios.create({
 axiosClient.interceptors.request.use(
   function (config) {
     // Do something before request is sent
+    config.headers["Cache-Control"] = "no-store"; // Không lưu cache
+    config.headers["Pragma"] = "no-cache"; // Không lưu cache cho các trình duyệt cũ (http 1.0)
     return config;
   },
   function (error) {
