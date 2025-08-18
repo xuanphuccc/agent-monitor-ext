@@ -7,6 +7,7 @@ import vueDevTools from "vite-plugin-vue-devtools";
 import { crx } from "@crxjs/vite-plugin";
 import manifest from "./manifest.config.js";
 import zip from "vite-plugin-zip-pack";
+import pkg from "./package.json";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -20,7 +21,7 @@ export default defineConfig({
     crx({
       manifest,
     }),
-    zip({ outDir: "release", outFileName: "release.zip" }),
+    zip({ outDir: "release", outFileName: `${pkg.name}-${pkg.version}.zip` }),
   ],
   resolve: {
     alias: {

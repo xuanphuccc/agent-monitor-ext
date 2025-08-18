@@ -1,11 +1,14 @@
 {
-  "name": "aiagent-monitor",
-  "version": "1.0.0",
-  "private": true,
+  "name": "xp-aiagent-monitor",
+  "version": "1.0.2",
+  "private": false,
   "type": "module",
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },
+  "files": [
+    "release"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
