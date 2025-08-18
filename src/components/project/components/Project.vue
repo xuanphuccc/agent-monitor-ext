@@ -150,7 +150,7 @@ const reloadData = () => {
 
                 <Skeleton v-if="loading" width="100px" height="12px" style="margin-top: 6px" />
                 <div v-else class="xp-project-role">
-                  {{ projectInfo && projectInfo.positionName ? projectInfo.positionName : "N/A" }}
+                  {{ projectInfo && projectInfo.divisionName ? projectInfo.divisionName : "N/A" }}
                 </div>
               </div>
             </div>
@@ -193,7 +193,7 @@ const reloadData = () => {
             ref="view-project-ref"
             :project="scopedProject"
             @loading="loading = $event"
-            @dataChange="projectInfo = $event"
+            @projectInfo="projectInfo = $event"
           />
         </AccordionContent>
       </AccordionPanel>

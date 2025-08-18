@@ -2,13 +2,15 @@
 import Chart from "primevue/chart";
 import SelectButton from "primevue/selectbutton";
 import DatePicker from "primevue/datepicker";
-import { ref, computed, onMounted } from "vue";
+import Skeleton from "primevue/skeleton";
+import { ref, onMounted, watch } from "vue";
 import { getAiAgentUsageByProject } from "@/services/reports-api";
 import { useToast } from "primevue/usetoast";
+import { FILTER_TYPE } from "@/enums/xp-enum";
 
 const toast = useToast();
 
-const emit = defineEmits(["dataChange", "loading"]);
+const emit = defineEmits(["projectInfo", "loading"]);
 const props = defineProps({
   project: {
     type: Object,
@@ -17,51 +19,18 @@ const props = defineProps({
 });
 
 const loading = ref(false);
-
-onMounted(() => {
-  chartData.value = setChartData();
-  chartOptions.value = setChartOptions();
-});
+const projectInfo = ref(null);
+const selectedDates = ref([new Date(), new Date()]);
+const seletecDate = ref(new Date());
 
 const chartData = ref();
 const chartOptions = ref();
 const options = [
-  { label: "Ngày", value: 1 },
-  { label: "Tháng", value: 2 },
+  { label: "Ngày", value: FILTER_TYPE.DATE },
+  { label: "Tháng", value: FILTER_TYPE.MONTH },
 ];
-const currentOption = ref(1);
+const currentOption = ref(FILTER_TYPE.DATE);
 
-const setChartData = () => {
-  return {
-    labels: ["txphuc", "lthai", "pdmanh", "nhson", "nhhung", "dgbao", "ptluyen"],
-    datasets: [
-      {
-        type: "bar",
-        label: "Cline",
-        backgroundColor: "#1e3a8a",
-        data: [50, 25, 12, 48, 90, 76, 42],
-      },
-      {
-        type: "bar",
-        label: "Cursor",
-        backgroundColor: "#1d4ed8",
-        data: [21, 84, 24, 75, 37, 65, 34],
-      },
-      {
-        type: "bar",
-        label: "OneAI",
-        backgroundColor: "#3b82f6",
-        data: [41, 52, 24, 74, 23, 21, 32],
-      },
-      {
-        type: "bar",
-        label: "AI Agents",
-        backgroundColor: "#93c5fd",
-        data: [41, 52, 24, 74, 23, 21, 32],
-      },
-    ],
-  };
-};
 const setChartOptions = () => {
   const documentStyle = getComputedStyle(document.documentElement);
   const textColor = documentStyle.getPropertyValue("--p-text-color");
@@ -121,57 +90,160 @@ const setChartOptions = () => {
 };
 
 /**
- * Hàm khởi tạo dữ liệu ban đầu
+ * Xử lý dữ liệu trả về từ API để hiển thị biểu đồ
+ * @param {*} data
  */
-const initData = async () => {
+const processDataForChart = (data) => {
+  if (!data || !Array.isArray(data)) {
+    return {
+      labels: [],
+      datasets: [],
+    };
+  }
+
+  const labels = data.map((item) => item.shortName);
+  const datasets = data.map((item) => ({
+    cline: item.clineTotalRequests || 0,
+    cursor: item.cursorTotalRequests || 0,
+    oneai: item.oneAiTotalRequests || 0,
+    aiagent: item.aiAgentTotalRequests || 0,
+  }));
+
+  // Lấy dữ liệu đầu tiên để lấy thông tin về project
+  const firstItem = data[0];
+  if (firstItem) {
+    const projectData = {
+      divisionName: firstItem.divisionName || "N/A",
+      projectName: props.project.projectName || "N/A",
+    };
+    projectInfo.value = projectData;
+    emit("projectInfo", projectData);
+  } else {
+    projectInfo.value = null;
+    emit("projectInfo", null);
+  }
+
+  return { labels, datasets };
+};
+
+const setChartData = (data = {}) => {
+  const { labels = [], datasets = [] } = data;
+  return {
+    labels,
+    datasets: [
+      {
+        type: "bar",
+        label: "Cline",
+        backgroundColor: "#1e3a8a",
+        data: datasets.map((item) => item.cline),
+      },
+      {
+        type: "bar",
+        label: "Cursor",
+        backgroundColor: "#1d4ed8",
+        data: datasets.map((item) => item.cursor),
+      },
+      {
+        type: "bar",
+        label: "OneAI",
+        backgroundColor: "#3b82f6",
+        data: datasets.map((item) => item.oneai),
+      },
+      {
+        type: "bar",
+        label: "AI Agents",
+        backgroundColor: "#93c5fd",
+        data: datasets.map((item) => item.aiagent),
+      },
+    ],
+  };
+};
+
+/**
+ * Hàm lấy dữ liệu cho biểu đồ
+ */
+const initData = async (resetFilter = true) => {
   try {
-    // // Kiểm tra xem có dữ liệu dự án không
-    // if (!props.project) {
-    //   return;
-    // }
-    // loading.value = true;
-    // emit("loading", true);
-    // const currentDate = new Date();
-    // const currentDay = currentDate.getDate();
-    // const currentMonth = currentDate.getMonth();
-    // const currentYear = currentDate.getFullYear();
-    // const startDate = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(currentDay).padStart(2, "0")}T00:00:00`;
-    // const endDate = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(currentDay).padStart(2, "0")}T23:59:59`;
-    // const projectDaylyUsageData = await getAiAgentUsageByProject(
-    //   props.project.projectName,
-    //   startDate,
-    //   endDate,
-    // );
-    // if (projectDaylyUsageData && projectDaylyUsageData.data && projectDaylyUsageData.data.success) {
-    //   const usageDataList = projectDaylyUsageData.data.data || [];
-    //   const projectUsage =
-    //     usageDataList.find((usage) => usage.projectCode === props.project.projectCode) || null;
-    //   if (projectUsage) {
-    //     daylyUsageData.value = projectUsage;
-    //     emit("dataChange", projectUsage);
-    //   } else {
-    //     toast.add({
-    //       severity: "error",
-    //       summary: `Nhân viên ${props.project.projectCode} không tồn tại.`,
-    //       life: 3000,
-    //     });
-    //   }
-    // } else {
-    //   toast.add({
-    //     severity: "error",
-    //     summary: "Lỗi khi lấy dữ liệu sử dụng hàng ngày.",
-    //     life: 3000,
-    //   });
-    // }
-    // loading.value = false;
-    // emit("loading", false);
+    loading.value = true;
+    emit("loading", true);
+
+    if (resetFilter) {
+      selectedDates.value = [new Date(), new Date()];
+      seletecDate.value = new Date();
+      currentOption.value = FILTER_TYPE.DATE;
+    }
+
+    let startDate, endDate;
+
+    if (currentOption.value === FILTER_TYPE.DATE) {
+      // Lọc theo ngày
+      const [start, end] = selectedDates.value;
+      if (!start || !end) {
+        return;
+      }
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+
+      // Format to YYYY-MM-DDTHH:mm:ss
+      startDate = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}T00:00:00`;
+      endDate = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}T23:59:59`;
+    } else {
+      // Lọc theo tháng
+      const selectedMonth = seletecDate.value;
+      const year = selectedMonth.getFullYear();
+      const month = selectedMonth.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+
+      firstDay.setHours(0, 0, 0, 0);
+      lastDay.setHours(23, 59, 59, 999);
+
+      startDate = `${firstDay.getFullYear()}-${String(firstDay.getMonth() + 1).padStart(2, "0")}-${String(firstDay.getDate()).padStart(2, "0")}T00:00:00`;
+      endDate = `${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, "0")}-${String(lastDay.getDate()).padStart(2, "0")}T23:59:59`;
+    }
+
+    const res = await getAiAgentUsageByProject(props.project.projectName, startDate, endDate);
+    if (res && res.data && res.data.success) {
+      const processedData = processDataForChart(res.data.data);
+      chartData.value = setChartData(processedData);
+    }
   } catch (error) {
-    console.error("Error initializing project data:", error);
+    console.error("Error fetching project data:", error);
+    toast.add({
+      severity: "error",
+      summary: "Lỗi",
+      detail: "Không thể lấy dữ liệu dự án",
+      life: 3000,
+    });
+  } finally {
     loading.value = false;
     emit("loading", false);
   }
 };
-initData();
+
+/**
+ * Hàm xử lý sự kiện khi thay đổi lựa chọn
+ */
+const handleOptionChange = () => {
+  if (currentOption.value === FILTER_TYPE.DATE) {
+    selectedDates.value = [new Date(), new Date()];
+  } else {
+    seletecDate.value = new Date();
+  }
+  initData(false);
+};
+
+/**
+ * Hàm xử lý sự thay đổi của selectedDates và seletecDate
+ */
+const handleDateChange = () => {
+  initData(false);
+};
+
+onMounted(() => {
+  initData();
+  chartOptions.value = setChartOptions();
+});
 
 defineExpose({
   initData,
@@ -181,21 +253,49 @@ defineExpose({
 <template>
   <div class="xp-view-project">
     <div class="xp-view-section">
-      <div class="xp-view-section-title">Dự án IVAN</div>
+      <div v-if="!loading" class="xp-view-section-title">
+        {{ projectInfo && projectInfo.projectName ? projectInfo.projectName : "N/A" }}
+      </div>
+      <Skeleton v-else width="150px" height="18px" />
       <div class="xp-view-section-content">
         <div class="xp-sections-filter">
           <SelectButton
             v-model="currentOption"
+            @change="handleOptionChange"
             optionLabel="label"
             optionValue="value"
             :options="options"
             :allowEmpty="false"
             size="small"
+            :disabled="loading"
           />
-          <!-- <DatePicker view="month" dateFormat="mm/yy" size="small" /> -->
-          <DatePicker selectionMode="multiple" :manualInput="false" size="small" />
+          <DatePicker
+            v-if="currentOption === FILTER_TYPE.MONTH"
+            v-model="seletecDate"
+            @value-change="handleDateChange"
+            view="month"
+            dateFormat="mm/yy"
+            size="small"
+            :manualInput="false"
+            :disabled="loading"
+          />
+          <DatePicker
+            v-else
+            v-model="selectedDates"
+            @value-change="handleDateChange"
+            selectionMode="range"
+            :manualInput="false"
+            size="small"
+            :disabled="loading"
+          />
         </div>
-        <Chart type="bar" :data="chartData" :options="chartOptions" :height="250" />
+        <Chart
+          v-if="chartData"
+          type="bar"
+          :data="chartData"
+          :options="chartOptions"
+          :height="250"
+        />
       </div>
     </div>
   </div>
