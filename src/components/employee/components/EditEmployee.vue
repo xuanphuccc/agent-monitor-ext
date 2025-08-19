@@ -1,6 +1,8 @@
 <script setup>
 import { Form } from "@primevue/forms";
 import InputText from "primevue/inputtext";
+import Checkbox from "primevue/checkbox";
+import CheckboxGroup from "primevue/checkboxgroup";
 import Button from "primevue/button";
 import Message from "primevue/message";
 import { zodResolver } from "@primevue/forms/resolvers/zod";
@@ -26,12 +28,14 @@ const props = defineProps({
 const toast = useToast();
 const initialValues = ref({
   employeeCode: "",
+  kpiTools: [],
 });
 
 const resolver = ref(
   zodResolver(
     z.object({
       employeeCode: z.string().min(1, { message: "Mã nhân viên không được để trống." }),
+      kpiTools: z.array(z.string()),
     }),
   ),
 );
@@ -40,6 +44,7 @@ const resolver = ref(
 const initFormValues = () => {
   initialValues.value = {
     employeeCode: props.initialValues.employeeCode || "",
+    kpiTools: props.initialValues.kpiTools || [],
   };
 };
 initFormValues();
@@ -114,6 +119,35 @@ const onFormSubmit = async (form) => {
         >
       </div>
 
+      <div class="xp-form-field">
+        <label class="xp-form-label"
+          >Công cụ tính KPI
+          <span
+            :title="`Lựa chọn công cụ để tính toán tổng số requests có đạt KPI không \nNếu không chọn sẽ tính theo mặc định`"
+            class="pi pi-info-circle"
+            style="font-size: 12px"
+          ></span
+        ></label>
+        <CheckboxGroup name="kpiTools" class="xp-checkbox-group">
+          <div class="xp-checkbox-item">
+            <Checkbox inputId="cline" value="cline" size="small" />
+            <label for="cline"> Cline </label>
+          </div>
+          <div class="xp-checkbox-item">
+            <Checkbox inputId="cursor" value="cursor" size="small" />
+            <label for="cursor"> Cursor </label>
+          </div>
+          <div class="xp-checkbox-item">
+            <Checkbox inputId="oneai" value="oneai" size="small" />
+            <label for="oneai"> OneAI </label>
+          </div>
+          <div class="xp-checkbox-item">
+            <Checkbox inputId="aiagent" value="aiagent" size="small" />
+            <label for="aiagent"> AI Agents </label>
+          </div>
+        </CheckboxGroup>
+      </div>
+
       <div class="xp-form-actions">
         <Button
           v-if="formMode !== FORM_MODE.Create"
@@ -148,7 +182,26 @@ const onFormSubmit = async (form) => {
       gap: 4px;
 
       .xp-form-label {
+        display: flex;
+        align-items: center;
         font-size: 12px;
+        column-gap: 8px;
+      }
+
+      .xp-checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .xp-checkbox-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          label {
+            font-size: 12px;
+          }
+        }
       }
     }
     .xp-form-field + .xp-form-field {

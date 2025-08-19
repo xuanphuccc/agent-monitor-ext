@@ -64,6 +64,14 @@ const settingConfigs = ref([
         field: "author",
         value: "@txphuc",
       },
+      {
+        icon: null,
+        title: "Nguồn dữ liệu",
+        description: null,
+        type: "link",
+        field: "author",
+        value: "http://aiagentmonitor.misa.local",
+      },
     ],
   },
 ]);
@@ -138,6 +146,11 @@ watch(
                     :max="100"
                     size="small"
                   />
+                </template>
+                <template v-else-if="item.type === 'link'">
+                  <a :href="item.value" target="_blank" class="xp-setting-item-value">
+                    {{ item.value }}
+                  </a>
                 </template>
                 <template v-else>
                   <div class="xp-setting-item-value">{{ item.value }}</div>

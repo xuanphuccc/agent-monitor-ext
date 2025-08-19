@@ -1,4 +1,4 @@
-import { getFromStorage } from "@/utils/common";
+import { calculateKpiRequests, getFromStorage } from "@/utils/common";
 import { getMonthlyUsageHistory } from "@/services/stats-api";
 
 const KPI_CHECK_ALARM_NAME = "kpiCheckAlarm";
@@ -103,7 +103,7 @@ const performKpiCheck = async () => {
       );
 
       if (todayUsage) {
-        totalRequests = todayUsage.positionBasedRequests;
+        totalRequests = calculateKpiRequests(todayUsage, firstEmployee.kpiTools);
       }
     }
 

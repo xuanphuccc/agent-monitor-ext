@@ -1,16 +1,34 @@
-# Progress
+## Progress
 
-The KPI notification feature has been successfully implemented.
+- Implemented `calculateKpiRequests` function in `ViewEmployee.vue` to calculate total requests based on selected KPI tools.
+- Modified `kpiCompletionRate` computed property to use `calculateKpiRequests`.
+- Modified `xp-overview-info-value` div to display the result of `calculateKpiRequests`.
+- Modified `getMonthlyUsageData` to calculate KPI requests and add it to `scopedMonthlyUsageData`.
+- Updated template to display the new `kpiRequests` field in `xp-datepicker-total-requests`.
+- Replaced `dailyUsageData.positionBasedRequests` with `calculateKpiRequests` in `overviewUsageClass` and `knobColor`.
 
-- **What Works**:
-  - Users can enable/disable KPI alerts, set a minimum request count, and specify a notification time in the settings panel.
-  - Settings are now saved using `chrome.storage.local`, making them accessible to the background service worker.
-  - A `chrome.alarm` is scheduled to trigger daily at the user-defined time.
-  - When the alarm fires, the background script checks the user's request count against the KPI.
-  - A system notification is displayed if the KPI is not met.
+## What works
 
-- **What's Left to Build**:
-  - The core functionality is complete. Further enhancements could include more detailed notification content or snooze options.
+- The `ViewEmployee.vue` component now correctly calculates and displays the total requests based on the selected KPI tools in `EditEmployee.vue`.
+- If no KPI tools are selected, the component defaults to using `positionBasedRequests`.
+- The `xp-datepicker-total-requests` now displays the `kpiRequests` value calculated in `getMonthlyUsageData`.
+- The `overviewUsageClass` and `knobColor` computed properties now use `calculateKpiRequests` to determine the usage level and knob color.
 
-- **Known Issues**:
-  - None at this time. The feature needs to be tested in a real environment to confirm its reliability.
+## What's left to build
+
+- Nothing. The task is complete.
+
+## Current status
+
+- The task is complete.
+
+## Known issues
+
+- None.
+
+## Evolution of project decisions
+
+- Initially, the `kpiCompletionRate` and `xp-overview-info-value` were directly using `positionBasedRequests`.
+- The task required to modify the component to use the selected KPI tools in `EditEmployee.vue` to calculate the total requests.
+- The `calculateKpiRequests` function was implemented to handle this logic.
+- To improve performance, the calculation of KPI requests was moved to the `getMonthlyUsageData` function.

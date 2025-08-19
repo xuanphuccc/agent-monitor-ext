@@ -98,3 +98,39 @@ export const getAvatarLetter = (fullName) => {
   const lastName = nameParts[nameParts.length - 1];
   return lastName.charAt(0).toUpperCase();
 };
+
+/**
+ * Tính toán tổng số requests dựa trên dữ liệu sử dụng hàng ngày và công cụ KPI đã chọn
+ * @param dailyUsageData
+ * @param kpiTools Công cụ KPI đã chọn
+ */
+export const calculateKpiRequests = (dailyUsageData, kpiTools) => {
+  if (!dailyUsageData) {
+    return 0;
+  }
+
+  if (!kpiTools || kpiTools.length === 0) {
+    return dailyUsageData.positionBasedRequests || 0;
+  }
+
+  let totalRequests = 0;
+  kpiTools.forEach((tool) => {
+    switch (tool) {
+      case "cline":
+        totalRequests += dailyUsageData.clineRequests || 0;
+        break;
+      case "cursor":
+        totalRequests += dailyUsageData.cursorRequests || 0;
+        break;
+      case "oneai":
+        totalRequests += dailyUsageData.oneAiRequests || 0;
+        break;
+      case "aiagent":
+        totalRequests += dailyUsageData.aiAgentRequests || 0;
+        break;
+      default:
+        break;
+    }
+  });
+  return totalRequests;
+};

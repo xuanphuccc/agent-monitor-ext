@@ -4,10 +4,9 @@ import DatePicker from "primevue/datepicker";
 import Skeleton from "primevue/skeleton";
 import Popover from "primevue/popover";
 import { ref, computed, useTemplateRef, nextTick } from "vue";
-import { getAiAgentUsageByProject } from "@/services/reports-api";
 import { useToast } from "primevue/usetoast";
 import { getMonthlyUsageHistory } from "@/services/stats-api";
-import { getSettings } from "@/utils/common";
+import { getSettings, calculateKpiRequests } from "@/utils/common";
 
 const toast = useToast();
 
@@ -40,26 +39,23 @@ const popoverData = ref(null);
 const popoverRef = useTemplateRef("popover-ref");
 
 const kpiCompletionRate = computed(() => {
-  if (!dailyUsageData.value || !dailyUsageData.value.positionBasedRequests) {
+  if (!dailyUsageData.value) {
     return 0;
   }
-  const rate = (dailyUsageData.value.positionBasedRequests / 5) * 100;
+  const totalRequests = calculateKpiRequests(dailyUsageData.value, props.employee.kpiTools);
+  const rate = (totalRequests / userSettings.value.minRequestCount) * 100;
   return Math.min(rate, 100);
 });
 
 const overviewUsageClass = computed(() => {
-  if (
-    !dailyUsageData.value ||
-    dailyUsageData.value.positionBasedRequests === null ||
-    dailyUsageData.value.positionBasedRequests === undefined
-  ) {
+  if (!dailyUsageData.value) {
     return "usage-high";
   }
-  const usage = dailyUsageData.value.positionBasedRequests;
-  if (usage < userSettings.value.minRequestCount) {
+  const totalRequests = calculateKpiRequests(dailyUsageData.value, props.employee.kpiTools);
+  if (totalRequests < userSettings.value.minRequestCount) {
     return "usage-low";
   }
-  if (usage <= 30) {
+  if (totalRequests <= 30) {
     return "usage-medium";
   }
   // if (usage <= 29) {
@@ -69,28 +65,20 @@ const overviewUsageClass = computed(() => {
 });
 
 const knobColor = computed(() => {
-  if (
-    !dailyUsageData.value ||
-    dailyUsageData.value.positionBasedRequests === null ||
-    dailyUsageData.value.positionBasedRequests === undefined
-  ) {
+  if (!dailyUsageData.value) {
     return "#358ffa";
   }
-  const usage = dailyUsageData.value.positionBasedRequests;
+  const totalRequests = calculateKpiRequests(dailyUsageData.value, props.employee.kpiTools);
 
-  // If usage is less than 5, use red color
-  if (usage < userSettings.value.minRequestCount) {
+  // If usage is less than minRequestCount, use red color
+  if (totalRequests < userSettings.value.minRequestCount) {
     return "#fa3535";
   }
-  // If usage is between 5 and 15, use green color
-  if (usage <= 30) {
+  // If usage is between minRequestCount and 30, use green color
+  if (totalRequests <= 30) {
     return "#28b998";
   }
-  // // If usage is between 16 and 29, use blue color
-  // if (usage <= 29) {
-  //   return "#358ffa";
-  // }
-  // If usage is 30 or more, use purple color
+  // If usage is greater than 30, use purple color
   return "#8b5cf6";
 });
 
@@ -135,18 +123,20 @@ const getMonthlyUsageData = async () => {
         }
 
         const dateKey = usage.day;
+        const kpiRequests = calculateKpiRequests(usage, props.employee.kpiTools);
         let indicatorColor = "#fa3535"; // Default color
 
-        if (usage.positionBasedRequests < userSettings.value.minRequestCount) {
+        if (kpiRequests < userSettings.value.minRequestCount) {
           indicatorColor = "#fa3535"; // Red
-        } else if (usage.positionBasedRequests <= 30) {
+        } else if (kpiRequests <= 30) {
           indicatorColor = "#28b998"; // Green
-        } else if (usage.positionBasedRequests > 30) {
+        } else if (kpiRequests > 30) {
           indicatorColor = "#8b5cf6"; // Purple
         }
 
         scopedMonthlyUsageData[dateKey] = {
           ...usage,
+          kpiRequests,
           indicatorColor,
         };
       });
@@ -258,12 +248,16 @@ defineExpose({
             />
           </div>
           <div class="xp-overview-info">
-            <div class="xp-overview-info-title">Số requests</div>
+            <div class="xp-overview-info-title">
+              Số requests
+              <span
+                :title="`Dựa trên các công cụ AI bạn đã chọn: ${props.employee.kpiTools?.length ? props.employee.kpiTools.join(' + ') : 'mặc định'} / số requests tối thiểu (${userSettings.minRequestCount})`"
+                class="info-title-icon pi pi-info-circle"
+              ></span>
+            </div>
             <div class="xp-overview-info-value">
               {{
-                dailyUsageData && dailyUsageData.positionBasedRequests
-                  ? dailyUsageData.positionBasedRequests
-                  : 0
+                dailyUsageData ? calculateKpiRequests(dailyUsageData, props.employee.kpiTools) : 0
               }}
             </div>
           </div>
@@ -330,7 +324,7 @@ defineExpose({
                 <template v-if="slotProps.date.selectable">
                   {{
                     monthlyUsageData[slotProps.date.day]
-                      ? monthlyUsageData[slotProps.date.day].positionBasedRequests
+                      ? monthlyUsageData[slotProps.date.day].kpiRequests
                       : 0
                   }}
                 </template>
@@ -415,9 +409,17 @@ defineExpose({
 
         .xp-overview-info {
           .xp-overview-info-title {
+            display: flex;
+            align-items: center;
             font-size: 14px;
             line-height: 18px;
             font-weight: 500;
+            .info-title-icon {
+              margin-left: 4px;
+              color: var(--color-text-secondary);
+              cursor: pointer;
+              font-size: 12px;
+            }
           }
 
           .xp-overview-info-value {
