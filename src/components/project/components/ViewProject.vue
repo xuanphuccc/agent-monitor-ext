@@ -21,7 +21,7 @@ const props = defineProps({
 const loading = ref(false);
 const projectInfo = ref(null);
 const selectedDates = ref([new Date(), new Date()]);
-const seletecDate = ref(new Date());
+const seletedDate = ref(new Date());
 
 const chartData = ref();
 const chartOptions = ref();
@@ -169,7 +169,7 @@ const initData = async (resetFilter = true) => {
 
     if (resetFilter) {
       selectedDates.value = [new Date(), new Date()];
-      seletecDate.value = new Date();
+      seletedDate.value = new Date();
       currentOption.value = FILTER_TYPE.DATE;
     }
 
@@ -189,7 +189,7 @@ const initData = async (resetFilter = true) => {
       endDate = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}T23:59:59`;
     } else {
       // Lọc theo tháng
-      const selectedMonth = seletecDate.value;
+      const selectedMonth = seletedDate.value;
       const year = selectedMonth.getFullYear();
       const month = selectedMonth.getMonth();
       const firstDay = new Date(year, month, 1);
@@ -228,13 +228,13 @@ const handleOptionChange = () => {
   if (currentOption.value === FILTER_TYPE.DATE) {
     selectedDates.value = [new Date(), new Date()];
   } else {
-    seletecDate.value = new Date();
+    seletedDate.value = new Date();
   }
   initData(false);
 };
 
 /**
- * Hàm xử lý sự thay đổi của selectedDates và seletecDate
+ * Hàm xử lý sự thay đổi của selectedDates và seletedDate
  */
 const handleDateChange = () => {
   initData(false);
@@ -271,7 +271,7 @@ defineExpose({
           />
           <DatePicker
             v-if="currentOption === FILTER_TYPE.MONTH"
-            v-model="seletecDate"
+            v-model="seletedDate"
             @value-change="handleDateChange"
             view="month"
             dateFormat="mm/yy"

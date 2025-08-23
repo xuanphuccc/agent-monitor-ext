@@ -1,8 +1,48 @@
 <script setup>
+import { getFromStorage, saveToStorage } from "@/utils/common";
 import Button from "primevue/button";
+import { ref } from "vue";
 
+const darkMode = ref(true);
+
+/**
+ * Initialize dark mode based on stored preference or default value
+ */
+const initData = async () => {
+  const storedDarkMode = await getFromStorage("darkMode");
+
+  if (storedDarkMode !== null) {
+    darkMode.value = storedDarkMode;
+    if (storedDarkMode) {
+      document.documentElement.classList.add("xp-dark-mode");
+    } else {
+      document.documentElement.classList.remove("xp-dark-mode");
+    }
+  } else {
+    darkMode.value = true; // Default to dark mode
+    document.documentElement.classList.add("xp-dark-mode");
+  }
+};
+initData();
+
+/**
+ * Handle close action
+ */
 const handleClose = () => {
   window.close();
+};
+
+/**
+ * Toggle dark mode
+ */
+const toggleDarkMode = () => {
+  darkMode.value = !darkMode.value;
+  if (darkMode.value) {
+    document.documentElement.classList.add("xp-dark-mode");
+  } else {
+    document.documentElement.classList.remove("xp-dark-mode");
+  }
+  saveToStorage("darkMode", darkMode.value);
 };
 </script>
 
@@ -27,6 +67,13 @@ const handleClose = () => {
         <div class="xp-title">AI Agent Monitor</div>
       </div>
       <div class="xp-header-actions">
+        <Button
+          @click.stop="toggleDarkMode"
+          size="small"
+          :icon="darkMode ? 'pi pi-sun' : 'pi pi-moon'"
+          variant="text"
+          title=""
+        />
         <Button
           @click.stop="$emit('setting')"
           size="small"

@@ -5,7 +5,7 @@
  */
 export const getFromStorage = async (key) => {
   const result = await chrome.storage.local.get(key);
-  return result[key] || null;
+  return result[key] ?? null;
 };
 
 /**
@@ -43,13 +43,16 @@ export const showNotification = (title = "This is title", message = "This is mes
  */
 export const saveSettings = (settings) => {
   const settingsToSave = { ...settings };
-  if (settingsToSave.notificationTime instanceof Date) {
-    // Chuyển đổi Date object thành object { hours, minutes }
-    const time = settingsToSave.notificationTime;
-    settingsToSave.notificationTime = {
-      hours: time.getHours(),
-      minutes: time.getMinutes(),
-    };
+  if (Array.isArray(settingsToSave.notificationTimes)) {
+    settingsToSave.notificationTimes = settingsToSave.notificationTimes.map((time) => {
+      if (time instanceof Date) {
+        return {
+          hours: time.getHours(),
+          minutes: time.getMinutes(),
+        };
+      }
+      return time;
+    });
   }
   chrome.storage.local.set({ settings: settingsToSave });
 };
@@ -64,7 +67,7 @@ export const getSettings = async () => {
     quickViewRequests: true,
     kpiAlert: true,
     minRequestCount: 5,
-    notificationTime: { hours: 16, minutes: 30 }, // Mặc định là 16:30
+    notificationTimes: [{ hours: 16, minutes: 30 }], // Mặc định là 16:30
   };
 
   const savedSettings = data.settings || {};
@@ -74,14 +77,23 @@ export const getSettings = async () => {
     quickViewRequests: savedSettings.quickViewRequests ?? defaults.quickViewRequests,
     kpiAlert: savedSettings.kpiAlert ?? defaults.kpiAlert,
     minRequestCount: savedSettings.minRequestCount ?? defaults.minRequestCount,
-    notificationTime: savedSettings.notificationTime ?? defaults.notificationTime,
+    notificationTimes: savedSettings.notificationTimes ?? defaults.notificationTimes,
   };
 
-  // Chuyển đổi object { hours, minutes } thành Date object để DatePicker sử dụng
-  const time = settings.notificationTime;
-  const date = new Date();
-  date.setHours(time.hours, time.minutes, 0, 0);
-  settings.notificationTime = date;
+  // Chuyển đổi mảng các object { hours, minutes } thành mảng các Date object để DatePicker sử dụng
+  if (Array.isArray(settings.notificationTimes)) {
+    settings.notificationTimes = settings.notificationTimes.map((time) => {
+      const date = new Date();
+      date.setHours(time.hours, time.minutes, 0, 0);
+      return date;
+    });
+  } else {
+    // Nếu notificationTimes không phải là mảng, chuyển đổi giá trị cũ sang mảng
+    const time = settings.notificationTimes;
+    const date = new Date();
+    date.setHours(time.hours, time.minutes, 0, 0);
+    settings.notificationTimes = [date];
+  }
 
   return settings;
 };
@@ -133,4 +145,15 @@ export const calculateKpiRequests = (dailyUsageData, kpiTools) => {
     }
   });
   return totalRequests;
+};
+
+/**
+ * Loại bỏ dấu tiếng Việt khỏi một chuỗi
+ * @param {string} str - Chuỗi cần xử lý
+ * @returns {string} - Chuỗi đã loại bỏ dấu tiếng Việt
+ */
+export const removeVietnameseMarks = (str) => {
+  str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  str = str.replace(/đ/g, "d").replace(/Đ/g, "D");
+  return str;
 };

@@ -86,7 +86,7 @@ app.use(PrimeVue, {
   theme: {
     preset: Noir,
     options: {
-      darkModeSelector: false,
+      darkModeSelector: ".xp-dark-mode",
     },
   },
   locale: {

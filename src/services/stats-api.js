@@ -20,3 +20,21 @@ export const getMonthlyUsageHistory = async (month, year, employeeCode) => {
     throw error;
   }
 };
+
+/**
+ * Tìm kiếm nhân viên
+ * @param {*} search
+ * @returns
+ */
+export const searchEmployees = async (search) => {
+  try {
+    const response = await axiosClient.get(`${basePath}/employees/search`, {
+      params: { searchTerm: search },
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Error search employees:", error);
+    throw error;
+  }
+};

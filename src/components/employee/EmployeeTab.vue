@@ -38,6 +38,7 @@ const onAddNewEmployee = () => {
   employeeList.value.push({
     id: uuidv4(),
     employeeCode: "",
+    employeeName: "",
     kpiTools: [],
     formMode: FORM_MODE.Create, // Chuyển sang chế độ thêm mới
   });

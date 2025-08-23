@@ -12,36 +12,35 @@ const settingConfigs = ref([
     items: [
       {
         icon: "pi pi-eye",
-        title: "Xem nhanh số requests",
-        description:
-          "Hiển thị số requests trong ngày của nhân viên đầu tiên trong danh sách trên biểu tượng tiện ích.",
+        title: "Xem nhanh số request",
+        description: "Hiển thị số request hôm nay trên biểu tượng tiện ích.",
         type: "toggle",
         field: "quickViewRequests",
         value: true,
       },
       {
         icon: "pi pi-bell",
-        title: "Cảnh báo KPI",
-        description: "Hiển thị thông báo khi chưa đạt KPI trong ngày.",
+        title: "Nhắc nhở sử dụng AI",
+        description: "Bật thông báo cho trình duyệt để sử dụng tính năng này.",
         type: "toggle",
         field: "kpiAlert",
         value: true,
       },
       {
         icon: null,
-        title: "Giờ thông báo",
-        description: null,
-        type: "time",
-        field: "notificationTime",
-        value: "08:00",
-      },
-      {
-        icon: null,
-        title: "Số request tối thiểu",
+        title: "Mục tiêu (request)",
         description: null,
         type: "number",
         field: "minRequestCount",
         value: 5,
+      },
+      {
+        icon: null,
+        title: "Giờ nhắc nhở",
+        description: null,
+        type: "multiple-time",
+        field: "notificationTimes",
+        value: [],
       },
     ],
   },
@@ -80,8 +79,25 @@ const settingValues = ref({
   quickViewRequests: true,
   kpiAlert: true,
   minRequestCount: 5,
-  notificationTime: new Date(),
+  notificationTimes: [new Date()], // Khởi tạo với một giờ thông báo mặc định
 });
+
+/**
+ * Hàm thêm giờ thông báo mới
+ * @returns {void}
+ */
+const addNotificationTime = () => {
+  settingValues.value.notificationTimes.push(new Date());
+};
+
+/**
+ * Hàm xóa giờ thông báo theo chỉ số
+ * @param {number} index - Chỉ số của giờ thông báo cần xóa
+ * @returns {void}
+ */
+const removeNotificationTime = (index) => {
+  settingValues.value.notificationTimes.splice(index, 1);
+};
 
 /**
  * Hàm khởi tạo dữ liệu cài đặt
@@ -124,20 +140,63 @@ watch(
       <div v-for="(section, index) in settingConfigs" :key="index" class="xp-setting-section">
         <div class="xp-setting-section-title">{{ section.title }}</div>
         <div class="xp-setting-section-content">
-          <div v-for="(item, itemIndex) in section.items" :key="itemIndex" class="xp-setting-item">
+          <div
+            v-for="(item, itemIndex) in section.items"
+            :key="itemIndex"
+            class="xp-setting-item"
+            :class="[`xp-setting-item-${item.type}`]"
+          >
             <div class="xp-setting-item-main">
               <div class="xp-setting-item-left">
                 <div v-if="item.icon" class="xp-setting-item-icon">
                   <i :class="['pi', item.icon]" style="font-size: 20px"></i>
                 </div>
                 <div class="xp-setting-item-title">{{ item.title }}</div>
+                <Button
+                  v-if="item.type === 'multiple-time'"
+                  @click="addNotificationTime"
+                  icon="pi pi-plus"
+                  variant="text"
+                  size="small"
+                  title="Thêm giờ nhắc nhở"
+                />
               </div>
               <div class="xp-setting-item-right">
                 <template v-if="item.type === 'toggle'">
                   <ToggleSwitch v-model="settingValues[item.field]" />
                 </template>
-                <template v-else-if="item.type === 'time'">
-                  <DatePicker v-model="settingValues[item.field]" timeOnly size="small" />
+                <template v-else-if="item.type === 'multiple-time'">
+                  <div class="xp-setting-multiple-time-wrapper">
+                    <div
+                      v-for="(time, timeIndex) in settingValues[item.field]"
+                      :key="timeIndex"
+                      class="xp-setting-multiple-time-item"
+                    >
+                      <DatePicker
+                        v-model="settingValues[item.field][timeIndex]"
+                        timeOnly
+                        size="small"
+                      />
+                      <Button
+                        v-if="settingValues[item.field].length > 1"
+                        @click="removeNotificationTime(timeIndex)"
+                        icon="pi pi-trash"
+                        severity="danger"
+                        variant="text"
+                        size="small"
+                        title="Xóa giờ nhắc nhở"
+                        class="xp-setting-multiple-time-remove"
+                        :dt="{
+                          sm: {
+                            padding: {
+                              x: '4px',
+                              y: '4px',
+                            },
+                          },
+                        }"
+                      />
+                    </div>
+                  </div>
                 </template>
                 <template v-else-if="item.type === 'number'">
                   <InputNumber
@@ -170,15 +229,14 @@ watch(
 .xp-setting {
   display: flex;
   flex-direction: column;
+  width: 100%;
   height: 100%;
-  padding-top: 12px;
 
   .xp-setting-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 0 8px;
-    margin-bottom: 24px;
+    padding: 12px 8px;
 
     .xp-setting-back {
       cursor: pointer;
@@ -193,12 +251,12 @@ watch(
   }
 
   .xp-setting-content {
-    padding: 0 16px;
+    padding: 12px 16px 0;
     flex: 1;
     overflow-y: auto;
 
     .xp-setting-section {
-      margin-bottom: 32px;
+      margin-bottom: 36px;
 
       .xp-setting-section-title {
         font-size: 14px;
@@ -216,6 +274,7 @@ watch(
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 8px;
           }
 
           .xp-setting-item-left {
@@ -234,6 +293,9 @@ watch(
               line-height: 18px;
               font-weight: 500;
               color: var(--color-text);
+              display: flex;
+              align-items: center;
+              gap: 8px;
             }
           }
 
@@ -253,6 +315,51 @@ watch(
             line-height: 1.5;
             color: var(--color-text-secondary);
             margin-top: 4px;
+          }
+
+          // Style cho setting item kiểu multiple-time
+          &.xp-setting-item-multiple-time {
+            .xp-setting-item-main {
+              flex-direction: column;
+              align-items: flex-start;
+            }
+
+            .xp-setting-item-left {
+              width: 100%;
+              justify-content: space-between;
+            }
+            .xp-setting-item-right {
+              width: 100%;
+              justify-content: flex-end;
+
+              .xp-setting-multiple-time-wrapper {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+
+                .xp-setting-multiple-time-item {
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  position: relative;
+
+                  .xp-setting-multiple-time-remove {
+                    position: absolute !important;
+                    right: 1px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    z-index: 1;
+                    display: none;
+                  }
+
+                  &:hover {
+                    .xp-setting-multiple-time-remove {
+                      display: inline-flex;
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

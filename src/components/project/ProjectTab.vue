@@ -37,6 +37,7 @@ const onAddNewProject = () => {
 
   projectList.value.push({
     id: uuidv4(),
+    divisionName: "",
     projectName: "",
     formMode: FORM_MODE.Create, // Chuyển sang chế độ thêm mới
   });

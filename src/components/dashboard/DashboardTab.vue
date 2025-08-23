@@ -201,7 +201,7 @@ initData();
         font-weight: 600;
         font-size: 14px;
         line-height: 18px;
-        color: var(--color-text);
+        color: var(--text-color);
       }
 
       .xp-view-section-content {
@@ -242,7 +242,7 @@ initData();
         font-size: 14px;
         line-height: 20px;
         height: 20px;
-        color: var(--color-text);
+        color: var(--text-color);
       }
 
       .xp-ranking-info {
@@ -250,13 +250,13 @@ initData();
           font-weight: 600;
           font-size: 14px;
           line-height: 18px;
-          color: var(--color-text);
+          color: var(--text-color);
         }
 
         .xp-ranking-role {
           font-size: 11px;
           line-height: 14px;
-          color: var(--color-text-secondary);
+          color: var(--text-color-secondary);
           // white-space: nowrap;
           // overflow: hidden;
           // text-overflow: ellipsis;

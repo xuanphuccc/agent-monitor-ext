@@ -1,16 +1,14 @@
 <script setup>
-import { Form } from "@primevue/forms";
-import InputText from "primevue/inputtext";
+import AutoComplete from "primevue/autocomplete";
 import Checkbox from "primevue/checkbox";
 import CheckboxGroup from "primevue/checkboxgroup";
 import Button from "primevue/button";
 import Message from "primevue/message";
-import { zodResolver } from "@primevue/forms/resolvers/zod";
-import { z } from "zod";
 import { useToast } from "primevue/usetoast";
 import { ref } from "vue";
 import { FORM_MODE } from "@/enums/xp-enum";
 import { getFromStorage, saveToStorage } from "@/utils/common";
+import { searchEmployees } from "@/services/stats-api";
 
 const emit = defineEmits(["cancel", "delete", "save"]);
 const props = defineProps({
@@ -26,38 +24,107 @@ const props = defineProps({
 });
 
 const toast = useToast();
-const initialValues = ref({
-  employeeCode: "",
-  kpiTools: [],
-});
+const loading = ref(false);
 
-const resolver = ref(
-  zodResolver(
-    z.object({
-      employeeCode: z.string().min(1, { message: "Mã nhân viên không được để trống." }),
-      kpiTools: z.array(z.string()),
-    }),
-  ),
-);
+const kpiTools = ref([]);
+const filteredEmployees = ref([]);
+const selectedEmployee = ref(null);
+const employeeError = ref(null);
+const employeeSearchValue = ref();
+const searchEmployeeLoading = ref(false);
 
-// Khởi tạo giá trị ban đầu cho form
-const initFormValues = () => {
-  initialValues.value = {
-    employeeCode: props.initialValues.employeeCode || "",
-    kpiTools: props.initialValues.kpiTools || [],
-  };
+/**
+ * Format label hiển thị cho AutoComplete
+ * @param employee
+ */
+const employeeOptionLabel = (employee) => {
+  return employee ? `${employee.EmployeeName} (${employee.EmployeeCode})` : "";
+};
+
+/**
+ * Xử lý tìm kiếm nhân viên
+ * @param event
+ */
+const handleSearchEmployee = async (event) => {
+  try {
+    if (event.query === employeeSearchValue.value) {
+      filteredEmployees.value = [...filteredEmployees.value];
+      return;
+    }
+
+    searchEmployeeLoading.value = true;
+    employeeSearchValue.value = event.query;
+
+    const response = await searchEmployees(event.query);
+
+    if (response.data && response.data.success && response.data.data) {
+      filteredEmployees.value = [...response.data.data];
+    } else {
+      filteredEmployees.value = [];
+    }
+
+    searchEmployeeLoading.value = false;
+  } catch (error) {
+    console.error("Error search employees:", error);
+    toast.add({
+      severity: "error",
+      summary: "Có lỗi xảy ra khi tìm kiếm nhân viên.",
+      life: 3000,
+    });
+    searchEmployeeLoading.value = false;
+  }
+};
+
+/**
+ * Khởi tạo giá trị ban đầu cho form
+ */
+const initFormValues = async () => {
+  loading.value = true;
+  // Load danh sách nhân viên
+  await handleSearchEmployee({ query: "" });
+
+  if (props.initialValues.employeeCode) {
+    const foundEmployee = filteredEmployees.value.find(
+      (emp) => emp.EmployeeCode === props.initialValues.employeeCode,
+    );
+    selectedEmployee.value = foundEmployee || null;
+  } else {
+    selectedEmployee.value = null;
+  }
+
+  kpiTools.value = props.initialValues.kpiTools || [];
+
+  loading.value = false;
 };
 initFormValues();
 
 /**
- * Xử lý sự kiện khi form được submit
- * @param {Object} form - Dữ liệu của form
+ * Validate nhân viên đã chọn
  */
-const onFormSubmit = async (form) => {
+const validateEmployee = () => {
+  if (
+    selectedEmployee.value &&
+    selectedEmployee.value.EmployeeCode &&
+    selectedEmployee.value.EmployeeName
+  ) {
+    employeeError.value = null;
+    return true;
+  }
+
+  employeeError.value = "Nhân viên không được để trống.";
+  return false;
+};
+
+/**
+ * Xử lý sự kiện khi form được submit
+ */
+const onFormSubmit = async () => {
   try {
-    if (form.valid) {
+    if (validateEmployee()) {
       const formValues = {
-        ...form.values,
+        kpiTools: kpiTools.value || [],
+        employeeCode: selectedEmployee.value?.EmployeeCode || null,
+        employeeName: selectedEmployee.value?.EmployeeName || null,
         id: props.initialValues.id || null, // Giữ nguyên ID nếu có, hoặc tạo mới nếu không có
       };
 
@@ -90,83 +157,91 @@ const onFormSubmit = async (form) => {
 
 <template>
   <div class="xp-edit-employee">
-    <Form
-      v-slot="$form"
-      :resolver="resolver"
-      :initialValues="initialValues"
-      :validateOnValueUpdate="true"
-      :validateOnBlur="true"
-      @submit="onFormSubmit"
-      class="xp-edit-employee-form"
-    >
+    <div class="xp-edit-employee-form">
       <div class="xp-form-field">
-        <label class="xp-form-label" for="employee-employeeCode">Mã nhân viên</label>
-        <InputText
-          name="employeeCode"
-          id="employee-employeeCode"
-          type="text"
-          placeholder="Nhập mã nhân viên VD: B06-0008"
+        <label class="xp-form-label" for="employee-selected-employee">Nhân viên</label>
+        <AutoComplete
+          v-model="selectedEmployee"
+          @change="validateEmployee"
+          :optionLabel="employeeOptionLabel"
+          :suggestions="filteredEmployees"
+          @complete="handleSearchEmployee"
+          :loading="searchEmployeeLoading"
+          :invalid="!!employeeError"
+          :disabled="loading"
+          placeholder="Chọn nhân viên"
+          dropdown
+          forceSelection
           fluid
           size="small"
-          :autofocus="true"
         />
-        <Message
-          v-if="$form.employeeCode?.invalid"
-          severity="error"
-          size="small"
-          variant="simple"
-          >{{ $form.employeeCode.error?.message }}</Message
-        >
+        <Message v-if="employeeError" severity="error" size="small" variant="simple">{{
+          employeeError
+        }}</Message>
       </div>
 
       <div class="xp-form-field">
         <label class="xp-form-label"
-          >Công cụ tính KPI
+          >Công cụ AI
           <span
-            :title="`Lựa chọn công cụ để tính toán tổng số requests có đạt KPI không \nNếu không chọn sẽ tính theo mặc định`"
+            :title="`Lựa chọn công cụ để tính toán tổng số request có đạt mục tiêu không \nNếu không chọn sẽ tính theo mặc định`"
             class="pi pi-info-circle"
             style="font-size: 12px"
           ></span
         ></label>
-        <CheckboxGroup name="kpiTools" class="xp-checkbox-group">
+        {{ kpiTools }}
+        <CheckboxGroup v-model="kpiTools" class="xp-checkbox-group">
           <div class="xp-checkbox-item">
-            <Checkbox inputId="cline" value="cline" size="small" />
+            <Checkbox inputId="cline" value="cline" size="small" :disabled="loading" />
             <label for="cline"> Cline </label>
           </div>
           <div class="xp-checkbox-item">
-            <Checkbox inputId="cursor" value="cursor" size="small" />
+            <Checkbox inputId="cursor" value="cursor" size="small" :disabled="loading" />
             <label for="cursor"> Cursor </label>
           </div>
           <div class="xp-checkbox-item">
-            <Checkbox inputId="oneai" value="oneai" size="small" />
+            <Checkbox inputId="oneai" value="oneai" size="small" :disabled="loading" />
             <label for="oneai"> OneAI </label>
           </div>
           <div class="xp-checkbox-item">
-            <Checkbox inputId="aiagent" value="aiagent" size="small" />
+            <Checkbox inputId="aiagent" value="aiagent" size="small" :disabled="loading" />
             <label for="aiagent"> AI Agents </label>
           </div>
         </CheckboxGroup>
       </div>
 
       <div class="xp-form-actions">
-        <Button
-          v-if="formMode !== FORM_MODE.Create"
-          @click="$emit('delete')"
-          label="Xoá"
-          icon="pi pi-trash"
-          severity="danger"
-          size="small"
-        />
-        <Button
-          @click="$emit('cancel')"
-          label="Huỷ"
-          icon="pi pi-times"
-          severity="secondary"
-          size="small"
-        />
-        <Button label="Lưu" icon="pi pi-save" type="submit" size="small" />
+        <div class="form-actions-left">
+          <Button
+            v-if="formMode !== FORM_MODE.Create"
+            @click="$emit('delete')"
+            :disabled="loading"
+            label="Xoá"
+            icon="pi pi-trash"
+            severity="danger"
+            variant="outlined"
+            size="small"
+          />
+        </div>
+        <div class="form-actions-right">
+          <Button
+            @click="$emit('cancel')"
+            label="Huỷ"
+            icon="pi pi-times"
+            severity="secondary"
+            size="small"
+          />
+          <Button
+            @click="onFormSubmit"
+            :disabled="loading"
+            label="Lưu"
+            icon="pi pi-save"
+            type="submit"
+            size="small"
+          />
+        </div>
       </div>
-    </Form>
+    </div>
   </div>
 </template>
 
@@ -210,9 +285,21 @@ const onFormSubmit = async (form) => {
 
     .xp-form-actions {
       display: flex;
-      justify-content: flex-end;
-      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
       margin-top: 24px;
+
+      .form-actions-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .form-actions-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
     }
   }
 }

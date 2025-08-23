@@ -249,9 +249,9 @@ defineExpose({
           </div>
           <div class="xp-overview-info">
             <div class="xp-overview-info-title">
-              Số requests
+              Số request
               <span
-                :title="`Dựa trên các công cụ AI bạn đã chọn: ${props.employee.kpiTools?.length ? props.employee.kpiTools.join(' + ') : 'mặc định'} / số requests tối thiểu (${userSettings.minRequestCount})`"
+                :title="`Dựa trên các công cụ AI bạn đã chọn: ${props.employee.kpiTools?.length ? props.employee.kpiTools.join(' + ') : 'mặc định'} / số request mục tiêu (${userSettings.minRequestCount})`"
                 class="info-title-icon pi pi-info-circle"
               ></span>
             </div>
@@ -307,6 +307,7 @@ defineExpose({
               v-else
               @click="handleDateSelect($event, monthlyUsageData[slotProps.date.day])"
               class="xp-datepicker-day-content"
+              title="Nhấn để xem chi tiết"
             >
               <div class="xp-datepicker-day">
                 <div
@@ -366,7 +367,7 @@ defineExpose({
       font-weight: 600;
       font-size: 14px;
       line-height: 18px;
-      color: var(--color-text);
+      color: var(--text-color);
     }
 
     .xp-view-section-content {
