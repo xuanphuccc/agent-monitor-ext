@@ -1,7 +1,6 @@
 <script setup>
 import AutoComplete from "primevue/autocomplete";
 import Checkbox from "primevue/checkbox";
-import CheckboxGroup from "primevue/checkboxgroup";
 import Button from "primevue/button";
 import Message from "primevue/message";
 import { useToast } from "primevue/usetoast";
@@ -122,7 +121,7 @@ const onFormSubmit = async () => {
   try {
     if (validateEmployee()) {
       const formValues = {
-        kpiTools: kpiTools.value || [],
+        kpiTools: [...kpiTools.value],
         employeeCode: selectedEmployee.value?.EmployeeCode || null,
         employeeName: selectedEmployee.value?.EmployeeName || null,
         id: props.initialValues.id || null, // Giữ nguyên ID nếu có, hoặc tạo mới nếu không có
@@ -189,25 +188,52 @@ const onFormSubmit = async () => {
             style="font-size: 12px"
           ></span
         ></label>
-        {{ kpiTools }}
-        <CheckboxGroup v-model="kpiTools" class="xp-checkbox-group">
+        <div class="xp-checkbox-group">
           <div class="xp-checkbox-item">
-            <Checkbox inputId="cline" value="cline" size="small" :disabled="loading" />
+            <Checkbox
+              v-model="kpiTools"
+              inputId="cline"
+              name="kpiTools"
+              value="cline"
+              size="small"
+              :disabled="loading"
+            />
             <label for="cline"> Cline </label>
           </div>
           <div class="xp-checkbox-item">
-            <Checkbox inputId="cursor" value="cursor" size="small" :disabled="loading" />
+            <Checkbox
+              v-model="kpiTools"
+              inputId="cursor"
+              name="kpiTools"
+              value="cursor"
+              size="small"
+              :disabled="loading"
+            />
             <label for="cursor"> Cursor </label>
           </div>
           <div class="xp-checkbox-item">
-            <Checkbox inputId="oneai" value="oneai" size="small" :disabled="loading" />
+            <Checkbox
+              v-model="kpiTools"
+              inputId="oneai"
+              name="kpiTools"
+              value="oneai"
+              size="small"
+              :disabled="loading"
+            />
             <label for="oneai"> OneAI </label>
           </div>
           <div class="xp-checkbox-item">
-            <Checkbox inputId="aiagent" value="aiagent" size="small" :disabled="loading" />
+            <Checkbox
+              v-model="kpiTools"
+              inputId="aiagent"
+              name="kpiTools"
+              value="aiagent"
+              size="small"
+              :disabled="loading"
+            />
             <label for="aiagent"> AI Agents </label>
           </div>
-        </CheckboxGroup>
+        </div>
       </div>
 
       <div class="xp-form-actions">
