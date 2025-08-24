@@ -6,7 +6,7 @@ import { useToast } from "primevue/usetoast";
 import { ref } from "vue";
 import { FORM_MODE } from "@/enums/xp-enum";
 import { getFromStorage, saveToStorage, removeVietnameseMarks } from "@/utils/common";
-import { getDivisionsReport, getProjectsReport } from "@/services/reports-api";
+import { getDivisions, getProjects } from "@/services/stats-api";
 
 const emit = defineEmits(["cancel", "delete", "save"]);
 const props = defineProps({
@@ -38,12 +38,12 @@ const projectsLoading = ref(false);
 /**
  * Xử lý lấy tất cả các khối
  */
-const getAllDivisions = async () => {
+const handleGetDivisions = async () => {
   try {
-    const response = await getDivisionsReport();
+    const response = await getDivisions();
 
     if (response.data && response.data.success && response.data.data) {
-      divisions.value = response.data.data.data ? [...response.data.data.data] : [];
+      divisions.value = [...response.data.data];
     } else {
       divisions.value = [];
     }
@@ -68,7 +68,7 @@ const handleSearchDivision = (event) => {
   }
   const searchQuery = removeVietnameseMarks(event.query).toLowerCase();
   filteredDivisions.value = divisions.value.filter((division) =>
-    removeVietnameseMarks(division.divisionName).toLowerCase().includes(searchQuery),
+    removeVietnameseMarks(division).toLowerCase().includes(searchQuery),
   );
 };
 
@@ -84,10 +84,10 @@ const handleGetProjects = async (divisionName) => {
 
     projectsLoading.value = true;
 
-    const response = await getProjectsReport(divisionName);
+    const response = await getProjects(divisionName);
 
     if (response.data && response.data.success && response.data.data) {
-      projects.value = response.data.data.data ? [...response.data.data.data] : [];
+      projects.value = [...response.data.data];
     } else {
       projects.value = [];
     }
@@ -115,14 +115,14 @@ const handleSearchProject = (event) => {
   }
   const searchQuery = removeVietnameseMarks(event.query).toLowerCase();
   filteredProjects.value = projects.value.filter((division) =>
-    removeVietnameseMarks(division.projectName).toLowerCase().includes(searchQuery),
+    removeVietnameseMarks(division).toLowerCase().includes(searchQuery),
   );
 };
 
 // Khởi tạo giá trị ban đầu cho form
 const initFormValues = async () => {
   loading.value = true;
-  const tasks = [getAllDivisions()];
+  const tasks = [handleGetDivisions()];
   if (props.initialValues.divisionName && props.initialValues.projectName) {
     tasks.push(handleGetProjects(props.initialValues.divisionName));
   }
@@ -130,26 +130,9 @@ const initFormValues = async () => {
   await Promise.all(tasks);
 
   // Tìm khối đã chọn
-  if (props.initialValues.divisionName) {
-    const searchQuery = removeVietnameseMarks(props.initialValues.divisionName).toLowerCase();
-    const foundDivision = divisions.value.find((division) =>
-      removeVietnameseMarks(division.divisionName).toLowerCase().includes(searchQuery),
-    );
-    selectedDivision.value = foundDivision || null;
-  } else {
-    selectedDivision.value = null;
-  }
-
+  selectedDivision.value = props.initialValues.divisionName || null;
   // Tìm dự án đã chọn
-  if (props.initialValues.projectName) {
-    const searchQuery = removeVietnameseMarks(props.initialValues.projectName).toLowerCase();
-    const foundProject = projects.value.find((project) =>
-      removeVietnameseMarks(project.projectName).toLowerCase().includes(searchQuery),
-    );
-    selectedProject.value = foundProject || null;
-  } else {
-    selectedProject.value = null;
-  }
+  selectedProject.value = props.initialValues.projectName || null;
 
   loading.value = false;
 };
@@ -159,7 +142,7 @@ initFormValues();
  * Validate khối đã chọn
  */
 const validateDivision = () => {
-  if (selectedDivision.value && selectedDivision.value.divisionName) {
+  if (selectedDivision.value) {
     divisionError.value = "";
     return true;
   }
@@ -172,7 +155,7 @@ const validateDivision = () => {
  * Validate dự án đã chọn
  */
 const validateProject = () => {
-  if (selectedProject.value && selectedProject.value.projectName) {
+  if (selectedProject.value) {
     projectError.value = "";
     return true;
   }
@@ -202,8 +185,8 @@ const onFormSubmit = async () => {
     const validateProjectResult = validateProject();
     if (validateDivisionResult && validateProjectResult) {
       const formValues = {
-        divisionName: selectedDivision.value?.divisionName,
-        projectName: selectedProject.value?.projectName,
+        divisionName: selectedDivision.value,
+        projectName: selectedProject.value,
         id: props.initialValues.id || null, // Giữ nguyên ID nếu có, hoặc tạo mới nếu không có
       };
 
@@ -244,8 +227,7 @@ const onFormSubmit = async () => {
         <AutoComplete
           v-model="selectedDivision"
           @change="handleDivisionChange"
-          @option-select="handleGetProjects($event.value?.divisionName)"
-          optionLabel="divisionName"
+          @option-select="handleGetProjects($event.value)"
           :suggestions="filteredDivisions"
           @complete="handleSearchDivision"
           :invalid="!!divisionError"
@@ -265,7 +247,6 @@ const onFormSubmit = async () => {
         <AutoComplete
           v-model="selectedProject"
           @change="validateProject"
-          optionLabel="projectName"
           :suggestions="filteredProjects"
           @complete="handleSearchProject"
           :loading="projectsLoading"

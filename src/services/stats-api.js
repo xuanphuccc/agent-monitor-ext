@@ -38,3 +38,36 @@ export const searchEmployees = async (search) => {
     throw error;
   }
 };
+
+/**
+ * Lấy danh sách khối
+ * @returns
+ */
+export const getDivisions = async () => {
+  try {
+    const response = await axiosClient.get(`${basePath}/distinct-divisions`);
+
+    return response;
+  } catch (error) {
+    console.error("Error get divisions:", error);
+    throw error;
+  }
+};
+
+/**
+ * Tìm kiếm nhân viên
+ * @param {*} divisionName
+ * @returns
+ */
+export const getProjects = async (divisionName) => {
+  try {
+    const response = await axiosClient.get(
+      `${basePath}/distinct-projects${divisionName ? "?divisionName=" + divisionName : ""}`,
+    );
+
+    return response;
+  } catch (error) {
+    console.error("Error get project:", error);
+    throw error;
+  }
+};
