@@ -53,7 +53,7 @@ const settingConfigs = ref([
         description: null,
         type: "text",
         field: "version",
-        value: "1.0.0",
+        value: "1.0.6",
       },
       {
         icon: null,
