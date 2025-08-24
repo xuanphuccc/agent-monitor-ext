@@ -3,9 +3,10 @@ import Knob from "primevue/knob";
 import DatePicker from "primevue/datepicker";
 import Skeleton from "primevue/skeleton";
 import Popover from "primevue/popover";
+import Message from "primevue/message";
 import { ref, computed, useTemplateRef, nextTick } from "vue";
 import { useToast } from "primevue/usetoast";
-import { getMonthlyUsageHistory } from "@/services/stats-api";
+import { getMonthlyUsageHistory, getWarningEmployees } from "@/services/stats-api";
 import { getSettings, calculateKpiRequests } from "@/utils/common";
 
 const toast = useToast();
@@ -37,6 +38,7 @@ const selectedDate = ref(new Date());
 const userSettings = ref({});
 const popoverData = ref(null);
 const popoverRef = useTemplateRef("popover-ref");
+const warningDays = ref(0);
 
 const kpiCompletionRate = computed(() => {
   if (!dailyUsageData.value) {
@@ -155,6 +157,42 @@ const getMonthlyUsageData = async () => {
 };
 
 /**
+ * Lấy dữ liệu cảnh báo tháng hiện tại để kiểm tra nhân viên có nằm trong danh sách này không
+ */
+const getWarningEmployeesData = async () => {
+  try {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+
+    // Lấy dữ liệu cảnh báo tháng hiện tại
+    const response = await getWarningEmployees(currentYear, currentMonth, "all");
+    if (response && response.data && response.data.success && response.data.data) {
+      const responseData = response.data.data;
+      const warningEmployees = responseData.warningEmployees ?? [];
+
+      // Tìm xem nhân viên có nằm trong danh sách không
+      const foundEmployee = warningEmployees.find(
+        (emp) => emp.employeeInfo?.EmployeeCode === props.employee.employeeCode,
+      );
+
+      if (foundEmployee) {
+        const totalDays = foundEmployee.warningStats?.totalDaysNotMeetingTarget ?? 0;
+        warningDays.value = totalDays ? String(totalDays).padStart(2, "0") : 0;
+      }
+    } else {
+      toast.add({
+        severity: "error",
+        summary: "Lỗi khi lấy dữ liệu cảnh báo.",
+        life: 3000,
+      });
+    }
+  } catch (error) {
+    console.error("Error get warning employees", error);
+  }
+};
+
+/**
  * Hàm khởi tạo dữ liệu ban đầu
  */
 const initData = async () => {
@@ -176,8 +214,7 @@ const initData = async () => {
     // Lấy cài đặt người dùng
     userSettings.value = await getSettings();
 
-    // Lấy dữ liệu sử dụng hàng ngày
-    await getMonthlyUsageData();
+    await Promise.all([getMonthlyUsageData(), getWarningEmployeesData()]);
 
     loading.value = false;
     emit("loading", false);
@@ -293,6 +330,19 @@ defineExpose({
 
     <div class="xp-view-section">
       <div class="xp-view-section-title">Tháng này</div>
+      <div>
+        <Message
+          v-if="warningDays"
+          class="xp-view-section-message"
+          severity="warn"
+          icon="pi pi-exclamation-triangle"
+          size="small"
+          closable
+        >
+          <span class="fw-bold">Cảnh báo:</span> Bạn đang trong danh sách cảnh báo tháng này với
+          <span class="fw-bold">{{ warningDays }} ngày</span> không đạt
+        </Message>
+      </div>
       <div class="xp-view-section-content">
         <DatePicker
           v-model="selectedDate"
@@ -307,7 +357,8 @@ defineExpose({
               v-else
               @click="handleDateSelect($event, monthlyUsageData[slotProps.date.day])"
               class="xp-datepicker-day-content"
-              title="Nhấn để xem chi tiết"
+              :class="[{ 'leave-day': monthlyUsageData[slotProps.date.day].isOnLeave }]"
+              :title="`${monthlyUsageData[slotProps.date.day].isOnLeave ? 'Nghỉ phép: ' + monthlyUsageData[slotProps.date.day].leaveDay + ' | ' : ''}Nhấn để xem chi tiết`"
             >
               <div class="xp-datepicker-day">
                 <div
@@ -338,6 +389,10 @@ defineExpose({
         <Popover ref="popover-ref">
           <div class="xp-daily-details">
             <div class="xp-daily-detail-item">
+              <span class="xp-daily-detail-label">Nghỉ phép</span>
+              <span class="xp-daily-detail-value">{{ popoverData.leaveDay }}</span>
+            </div>
+            <div class="xp-daily-detail-item">
               <span class="xp-daily-detail-label">Cline</span>
               <span class="xp-daily-detail-value">{{ popoverData.clineRequests }}</span>
             </div>
@@ -361,6 +416,9 @@ defineExpose({
 </template>
 
 <style lang="scss" scoped>
+.fw-bold {
+  font-weight: 700;
+}
 .xp-view-employee {
   .xp-view-section {
     .xp-view-section-title {
@@ -368,6 +426,10 @@ defineExpose({
       font-size: 14px;
       line-height: 18px;
       color: var(--text-color);
+    }
+
+    .xp-view-section-message {
+      margin-top: 16px;
     }
 
     .xp-view-section-content {
@@ -467,6 +529,9 @@ defineExpose({
         display: flex;
         flex-direction: column;
         user-select: none;
+        &.leave-day {
+          background: #dbeafe;
+        }
         .xp-datepicker-day {
           display: flex;
           align-items: center;

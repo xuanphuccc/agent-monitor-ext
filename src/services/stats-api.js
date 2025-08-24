@@ -29,7 +29,7 @@ export const getMonthlyUsageHistory = async (month, year, employeeCode) => {
 export const searchEmployees = async (search) => {
   try {
     const response = await axiosClient.get(`${basePath}/employees/search`, {
-      params: { searchTerm: search },
+      params: { searchTerm: encodeURIComponent(search) },
     });
 
     return response;
@@ -55,19 +55,61 @@ export const getDivisions = async () => {
 };
 
 /**
- * Tìm kiếm nhân viên
+ * Lấy danh sách dự án
  * @param {*} divisionName
  * @returns
  */
 export const getProjects = async (divisionName) => {
   try {
     const response = await axiosClient.get(
-      `${basePath}/distinct-projects${divisionName ? "?divisionName=" + divisionName : ""}`,
+      `${basePath}/distinct-projects${divisionName ? "?divisionName=" + encodeURIComponent(divisionName) : ""}`,
     );
 
     return response;
   } catch (error) {
     console.error("Error get project:", error);
+    throw error;
+  }
+};
+
+/**
+ * Lấy danh sách nhân viên cảnh báo
+ * @param {*} year
+ * @param {*} month
+ * @param {*} daysNotMeeting
+ * @param {*} divisionName
+ * @param {*} projectName
+ * @returns
+ */
+export const getWarningEmployees = async (
+  year,
+  month,
+  daysNotMeeting,
+  divisionName,
+  projectName,
+) => {
+  try {
+    const queryParams = {
+      year,
+      month,
+      daysNotMeeting: daysNotMeeting ?? "all",
+    };
+
+    if (divisionName) {
+      queryParams["divisionName"] = divisionName;
+    }
+
+    if (projectName) {
+      queryParams["projectName"] = projectName;
+    }
+
+    const response = await axiosClient.get(`${basePath}/warnings-list`, {
+      params: queryParams,
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Error get warning employees:", error);
     throw error;
   }
 };
