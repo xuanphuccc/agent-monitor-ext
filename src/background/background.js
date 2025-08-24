@@ -89,6 +89,18 @@ const scheduleKpiCheckAlarm = async () => {
   } else {
     console.log("⛔ KPI alerts are disabled or no notification times are set.");
   }
+
+  // Lên lịch báo thức cập nhật badge mỗi 10 phút nếu quickViewRequests được bật
+  if (settings.quickViewRequests) {
+    chrome.alarms.create("badgeUpdateAlarm", {
+      periodInMinutes: 10,
+    });
+    console.log("✅ Badge update alarm scheduled for every 10 minutes.");
+  } else {
+    chrome.alarms.clear("badgeUpdateAlarm");
+    updateBadge(0); // Xóa badge nếu tính năng bị tắt
+    console.log("⛔ Badge update alarm cleared.");
+  }
 };
 
 /**
@@ -96,30 +108,39 @@ const scheduleKpiCheckAlarm = async () => {
  * Lấy dữ liệu sử dụng AI agent và so sánh với KPI đã đặt.
  * Hiển thị thông báo nếu KPI không đạt.
  */
-const performKpiCheck = async () => {
-  const settings = await getRawSettings();
-  if (!settings.kpiAlert) {
-    return;
-  }
+/**
+ * Cập nhật badge của extension với số request và màu sắc.
+ * @param {number} requestCount - Số request để hiển thị trên badge.
+ */
+const updateBadge = (requestCount) => {
+  const text = requestCount > 0 ? String(requestCount) : "";
+  chrome.action.setBadgeText({ text: text });
+  chrome.action.setBadgeBackgroundColor({ color: "#4285F4" }); // Màu xanh lam của Google
+};
 
+/**
+ * Thực hiện kiểm tra KPI.
+ * Lấy dữ liệu sử dụng AI agent và so sánh với KPI đã đặt.
+ * Hiển thị thông báo nếu KPI không đạt.
+ */
+/**
+ * Lấy số request trong ngày hiện tại của nhân viên đầu tiên.
+ * @returns {Promise<number>} - Promise trả về tổng số request.
+ */
+const getTodayRequestsForFirstEmployee = async () => {
   try {
-    // Lấy danh sách nhân viên từ storage
     const employeeList = (await getFromStorage("employeeList")) || [];
     if (employeeList.length === 0) {
-      console.log("No employees found. Skipping KPI check.");
-      return;
+      console.log("No employees found. Skipping request count.");
+      return 0;
     }
 
-    // Lấy nhân viên đầu tiên
     const firstEmployee = employeeList[0];
-
-    // Lấy ngày tháng hiện tại
     const currentDate = new Date();
     const currentDay = currentDate.getDate();
     const currentMonth = currentDate.getMonth() + 1;
     const currentYear = currentDate.getFullYear();
 
-    // Gọi API để lấy lịch sử sử dụng
     const response = await getMonthlyUsageHistory(
       currentMonth,
       currentYear,
@@ -139,6 +160,21 @@ const performKpiCheck = async () => {
         totalRequests = calculateKpiRequests(todayUsage, firstEmployee.kpiTools);
       }
     }
+    return totalRequests;
+  } catch (error) {
+    console.error("❌ Error getting today's requests for first employee:", error);
+    return 0;
+  }
+};
+
+const performKpiCheck = async () => {
+  const settings = await getRawSettings();
+  if (!settings.kpiAlert) {
+    return;
+  }
+
+  try {
+    const totalRequests = await getTodayRequestsForFirstEmployee();
 
     if (totalRequests < settings.minRequestCount) {
       chrome.notifications.create({
@@ -163,7 +199,21 @@ const performKpiCheck = async () => {
 chrome.runtime.onInstalled.addListener(() => {
   console.log("✅ Extension installed or updated.");
   scheduleKpiCheckAlarm();
+  updateBadgeWithTodayRequests(); // Cập nhật badge ngay khi cài đặt/cập nhật
 });
+
+/**
+ * Cập nhật badge của extension với số request trong ngày hiện tại.
+ */
+const updateBadgeWithTodayRequests = async () => {
+  const settings = await getRawSettings();
+  if (!settings.quickViewRequests) {
+    updateBadge(0); // Xóa badge nếu tính năng bị tắt
+    return;
+  }
+  const totalRequests = await getTodayRequestsForFirstEmployee();
+  updateBadge(totalRequests);
+};
 
 /**
  * Listener cho các sự kiện báo thức.
@@ -173,6 +223,9 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name.startsWith(KPI_CHECK_ALARM_PREFIX)) {
     console.log(`⏰ KPI check alarm triggered: ${alarm.name}`);
     performKpiCheck();
+  } else if (alarm.name === "badgeUpdateAlarm") {
+    console.log(`⏰ Badge update alarm triggered: ${alarm.name}`);
+    updateBadgeWithTodayRequests();
   }
 });
 
@@ -184,5 +237,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === "local" && changes.settings) {
     console.log("⚙️ Settings changed, re-scheduling KPI alarm.");
     scheduleKpiCheckAlarm();
+
+    updateBadgeWithTodayRequests(); // Cập nhật badge ngay khi thay đổi cài đặt
   }
 });
