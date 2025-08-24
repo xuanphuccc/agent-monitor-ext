@@ -68,6 +68,7 @@ const toggleDarkMode = () => {
       </div>
       <div class="xp-header-actions">
         <Button
+          v-if="false"
           @click.stop="toggleDarkMode"
           size="small"
           :icon="darkMode ? 'pi pi-sun' : 'pi pi-moon'"

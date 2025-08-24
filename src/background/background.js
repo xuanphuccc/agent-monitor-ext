@@ -1,4 +1,4 @@
-import { calculateKpiRequests, getFromStorage } from "@/utils/common";
+import { calculateKpiRequests, getFromStorage, getRandomNotification } from "@/utils/common";
 import { getMonthlyUsageHistory } from "@/services/stats-api";
 
 const KPI_CHECK_ALARM_PREFIX = "kpiCheckAlarm_";
@@ -177,11 +177,12 @@ const performKpiCheck = async () => {
     const totalRequests = await getTodayRequestsForFirstEmployee();
 
     if (totalRequests < settings.minRequestCount) {
+      const { title, message } = getRandomNotification(totalRequests, settings.minRequestCount);
       chrome.notifications.create({
         type: "basic",
         iconUrl: "logo-128.png",
-        title: "Cảnh báo KPI",
-        message: `Bạn chưa đạt KPI! Số requests hiện tại là ${totalRequests}/${settings.minRequestCount}.`,
+        title: title,
+        message: message,
         priority: 2,
       });
     }

@@ -3,14 +3,17 @@ import Chart from "primevue/chart";
 import SelectButton from "primevue/selectbutton";
 import DatePicker from "primevue/datepicker";
 import Skeleton from "primevue/skeleton";
+import Avatar from "primevue/avatar";
 import { ref, onMounted, watch } from "vue";
 import { getAiAgentUsageByProject } from "@/services/reports-api";
 import { useToast } from "primevue/usetoast";
 import { FILTER_TYPE } from "@/enums/xp-enum";
+import { getAvatarLetter } from "@/utils/common";
+import { getWarningEmployees } from "@/services/stats-api";
 
 const toast = useToast();
 
-const emit = defineEmits(["projectInfo", "loading"]);
+const emit = defineEmits(["loading"]);
 const props = defineProps({
   project: {
     type: Object,
@@ -19,11 +22,13 @@ const props = defineProps({
 });
 
 const loading = ref(false);
-const projectInfo = ref(null);
 const selectedDates = ref([new Date(), new Date()]);
 const seletedDate = ref(new Date());
+const underperformingEmployees = ref([]);
+const warningEmployees = ref([]);
 
 const chartData = ref();
+const chartHeight = ref(250);
 const chartOptions = ref();
 const options = [
   { label: "Ngày", value: FILTER_TYPE.DATE },
@@ -83,10 +88,83 @@ const setChartOptions = () => {
 
     elements: {
       bar: {
-        borderRadius: 4,
+        borderRadius: 12,
       },
     },
   };
+};
+
+/**
+ * Lọc ra các nhân viên chưa đạt mục tiêu hôm nay
+ * @param {Array} data - Dữ liệu nhân viên từ API
+ * @param {string} startDate - Ngày bắt đầu lọc
+ * @param {string} endDate - Ngày kết thúc lọc
+ */
+const filterUnderperformingEmployees = (data, startDate, endDate) => {
+  if (!data || !Array.isArray(data)) {
+    return;
+  }
+
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+  const todayEnd = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+    23,
+    59,
+    59,
+    999,
+  );
+
+  const filterStartDate = new Date(startDate);
+  const filterEndDate = new Date(endDate);
+
+  // Kiểm tra xem startDate và endDate có phải là ngày hôm nay không
+  const isToday =
+    filterStartDate.getFullYear() === todayStart.getFullYear() &&
+    filterStartDate.getMonth() === todayStart.getMonth() &&
+    filterStartDate.getDate() === todayStart.getDate() &&
+    filterEndDate.getFullYear() === todayEnd.getFullYear() &&
+    filterEndDate.getMonth() === todayEnd.getMonth() &&
+    filterEndDate.getDate() === todayEnd.getDate();
+
+  if (currentOption.value === FILTER_TYPE.DATE && isToday) {
+    underperformingEmployees.value = data.filter((employee) => employee.relevantToolsTotal < 5);
+  }
+  // Nếu không phải ngày hôm nay, không xóa dữ liệu đã lọc trước đó
+};
+
+/**
+ * Lấy dữ liệu cảnh báo tháng hiện tại
+ */
+const getWarningEmployeesData = async () => {
+  try {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+
+    // Lấy dữ liệu cảnh báo tháng hiện tại
+    const response = await getWarningEmployees(
+      currentYear,
+      currentMonth,
+      "all",
+      props.project.projectName,
+      props.project.divisionName,
+    );
+    if (response && response.data && response.data.success && response.data.data) {
+      const responseData = response.data.data;
+      warningEmployees.value = responseData.warningEmployees ?? [];
+    } else {
+      toast.add({
+        severity: "error",
+        summary: "Lỗi khi lấy dữ liệu cảnh báo.",
+        life: 3000,
+      });
+    }
+  } catch (error) {
+    console.error("Error get warning employees", error);
+  }
 };
 
 /**
@@ -109,25 +187,18 @@ const processDataForChart = (data) => {
     aiagent: item.aiAgentTotalRequests || 0,
   }));
 
-  // Lấy dữ liệu đầu tiên để lấy thông tin về project
-  const firstItem = data[0];
-  if (firstItem) {
-    const projectData = {
-      divisionName: firstItem.divisionName || "N/A",
-      projectName: props.project.projectName || "N/A",
-    };
-    projectInfo.value = projectData;
-    emit("projectInfo", projectData);
-  } else {
-    projectInfo.value = null;
-    emit("projectInfo", null);
-  }
-
   return { labels, datasets };
 };
 
 const setChartData = (data = {}) => {
   const { labels = [], datasets = [] } = data;
+
+  // Tính toán chiều cao của biểu đồ
+  const paddingTop = 12;
+  const paddingBottom = 68;
+  const itemHeight = 28;
+  chartHeight.value = paddingTop + paddingBottom + itemHeight * labels.length;
+
   return {
     labels,
     datasets: [
@@ -136,41 +207,41 @@ const setChartData = (data = {}) => {
         label: "Cline",
         backgroundColor: "#1e3a8a",
         data: datasets.map((item) => item.cline),
+        barThickness: 12,
       },
       {
         type: "bar",
         label: "Cursor",
         backgroundColor: "#1d4ed8",
         data: datasets.map((item) => item.cursor),
+        barThickness: 12,
       },
       {
         type: "bar",
         label: "OneAI",
         backgroundColor: "#3b82f6",
         data: datasets.map((item) => item.oneai),
+        barThickness: 12,
       },
       {
         type: "bar",
         label: "AI Agents",
         backgroundColor: "#93c5fd",
         data: datasets.map((item) => item.aiagent),
+        barThickness: 12,
       },
     ],
   };
 };
 
 /**
- * Hàm lấy dữ liệu cho biểu đồ
+ * Hàm lấy dữ liệu sử dụng AI của dự án
  */
-const initData = async (resetFilter = true) => {
+const getProjectUsageData = async () => {
   try {
-    loading.value = true;
-    emit("loading", true);
-
-    if (resetFilter) {
-      selectedDates.value = [new Date(), new Date()];
-      seletedDate.value = new Date();
-      currentOption.value = FILTER_TYPE.DATE;
+    // Kiểm tra xem có dữ liệu dự án
+    if (!props.project) {
+      return;
     }
 
     let startDate, endDate;
@@ -206,16 +277,39 @@ const initData = async (resetFilter = true) => {
     if (res && res.data && res.data.success) {
       const processedData = processDataForChart(res.data.data);
       chartData.value = setChartData(processedData);
+      filterUnderperformingEmployees(res.data.data, startDate, endDate);
+    } else {
+      toast.add({
+        severity: "error",
+        summary: "Lỗi",
+        detail: "Lỗi khi lấy dữ liệu dự án",
+        life: 3000,
+      });
     }
   } catch (error) {
     console.error("Error fetching project data:", error);
-    toast.add({
-      severity: "error",
-      summary: "Lỗi",
-      detail: "Không thể lấy dữ liệu dự án",
-      life: 3000,
-    });
-  } finally {
+  }
+};
+
+/**
+ * Hàm lấy dữ liệu cho biểu đồ
+ */
+const initData = async () => {
+  try {
+    loading.value = true;
+    emit("loading", true);
+
+    // Reset filter
+    selectedDates.value = [new Date(), new Date()];
+    seletedDate.value = new Date();
+    currentOption.value = FILTER_TYPE.DATE;
+
+    await Promise.all([getProjectUsageData(), getWarningEmployeesData()]);
+
+    loading.value = false;
+    emit("loading", false);
+  } catch (error) {
+    console.error("Error initializing project data:", error);
     loading.value = false;
     emit("loading", false);
   }
@@ -224,20 +318,20 @@ const initData = async (resetFilter = true) => {
 /**
  * Hàm xử lý sự kiện khi thay đổi lựa chọn
  */
-const handleOptionChange = () => {
+const handleOptionChange = async () => {
   if (currentOption.value === FILTER_TYPE.DATE) {
     selectedDates.value = [new Date(), new Date()];
   } else {
     seletedDate.value = new Date();
   }
-  initData(false);
+  await getProjectUsageData();
 };
 
 /**
  * Hàm xử lý sự thay đổi của selectedDates và seletedDate
  */
 const handleDateChange = () => {
-  initData(false);
+  getProjectUsageData();
 };
 
 onMounted(() => {
@@ -253,10 +347,7 @@ defineExpose({
 <template>
   <div class="xp-view-project">
     <div class="xp-view-section">
-      <div v-if="!loading" class="xp-view-section-title">
-        {{ projectInfo && projectInfo.projectName ? projectInfo.projectName : "N/A" }}
-      </div>
-      <Skeleton v-else width="150px" height="18px" />
+      <div class="xp-view-section-title">Tình hình sử dụng</div>
       <div class="xp-view-section-content">
         <div class="xp-sections-filter">
           <SelectButton
@@ -269,33 +360,137 @@ defineExpose({
             size="small"
             :disabled="loading"
           />
-          <DatePicker
-            v-if="currentOption === FILTER_TYPE.MONTH"
-            v-model="seletedDate"
-            @value-change="handleDateChange"
-            view="month"
-            dateFormat="mm/yy"
-            size="small"
-            :manualInput="false"
-            :disabled="loading"
-          />
-          <DatePicker
-            v-else
-            v-model="selectedDates"
-            @value-change="handleDateChange"
-            selectionMode="range"
-            :manualInput="false"
-            size="small"
-            :disabled="loading"
-          />
+          <div style="width: 168px">
+            <DatePicker
+              v-if="currentOption === FILTER_TYPE.MONTH"
+              v-model="seletedDate"
+              @value-change="handleDateChange"
+              view="month"
+              dateFormat="mm/yy"
+              size="small"
+              fluid
+              :manualInput="false"
+              :disabled="loading"
+            />
+            <DatePicker
+              v-else
+              v-model="selectedDates"
+              @value-change="handleDateChange"
+              selectionMode="range"
+              size="small"
+              fluid
+              :manualInput="false"
+              :disabled="loading"
+            />
+          </div>
         </div>
         <Chart
           v-if="chartData"
           type="bar"
           :data="chartData"
           :options="chartOptions"
-          :height="250"
+          :height="chartHeight"
+          style="border: 1px solid #dee9fc; border-radius: 8px"
         />
+      </div>
+    </div>
+
+    <div class="xp-view-section">
+      <div class="xp-view-section-title">Nhân viên chưa đạt hôm nay</div>
+      <div class="xp-view-section-content">
+        <div
+          v-if="!loading && underperformingEmployees.length > 0"
+          v-for="(user, index) in underperformingEmployees"
+          :key="index"
+          class="xp-ranking-item"
+        >
+          <div class="xp-ranking-left">
+            <Avatar
+              :label="getAvatarLetter(user.employeeName)"
+              class="mr-2 flex-shrink-0"
+              style="background-color: #dee9fc; color: #1a2551"
+              shape="circle"
+            />
+            <div class="xp-ranking-info">
+              <div class="xp-ranking-name" :title="user.employeeName">
+                {{ user.employeeName }}
+              </div>
+              <div class="xp-ranking-role" :title="`${user.employeeCode} - ${user.positionName}`">
+                {{ user.employeeCode }} - {{ user.positionName }}
+              </div>
+            </div>
+          </div>
+          <div class="xp-ranking-item-score">{{ user.relevantToolsTotal }} request</div>
+        </div>
+        <div v-else-if="!loading && underperformingEmployees.length === 0" class="xp-empty">
+          Không có nhân viên nào.
+        </div>
+        <div v-else class="xp-ranking-item">
+          <div class="xp-ranking-left">
+            <Skeleton shape="circle" size="28px" class="mr-2" />
+            <div class="xp-ranking-info">
+              <div class="xp-ranking-name">
+                <Skeleton width="150px" height="14px" />
+              </div>
+              <div class="xp-ranking-role">
+                <Skeleton width="120px" height="12px" style="margin-top: 6px" />
+              </div>
+            </div>
+          </div>
+          <div class="xp-ranking-item-score"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="xp-view-section">
+      <div class="xp-view-section-title">Nhân viên cảnh báo tháng này</div>
+      <div class="xp-view-section-content">
+        <div
+          v-if="!loading && warningEmployees.length > 0"
+          v-for="(user, index) in warningEmployees"
+          :key="index"
+          class="xp-ranking-item"
+        >
+          <div class="xp-ranking-left">
+            <Avatar
+              :label="getAvatarLetter(user.employeeInfo?.EmployeeName)"
+              class="mr-2 flex-shrink-0"
+              style="background-color: #dee9fc; color: #1a2551"
+              shape="circle"
+            />
+            <div class="xp-ranking-info">
+              <div class="xp-ranking-name" :title="user.employeeInfo?.EmployeeName">
+                {{ user.employeeInfo?.EmployeeName }}
+              </div>
+              <div
+                class="xp-ranking-role"
+                :title="`${user.employeeInfo?.EmployeeCode} - ${user.employeeInfo?.PositionName}`"
+              >
+                {{ user.employeeInfo?.EmployeeCode }} - {{ user.employeeInfo?.PositionName }}
+              </div>
+            </div>
+          </div>
+          <div class="xp-ranking-item-score">
+            {{ user.warningStats?.totalDaysNotMeetingTarget || 0 }} ngày
+          </div>
+        </div>
+        <div v-else-if="!loading && warningEmployees.length === 0" class="xp-empty">
+          Không có nhân viên nào.
+        </div>
+        <div v-else class="xp-ranking-item">
+          <div class="xp-ranking-left">
+            <Skeleton shape="circle" size="28px" class="mr-2" />
+            <div class="xp-ranking-info">
+              <div class="xp-ranking-name">
+                <Skeleton width="150px" height="14px" />
+              </div>
+              <div class="xp-ranking-role">
+                <Skeleton width="120px" height="12px" style="margin-top: 6px" />
+              </div>
+            </div>
+          </div>
+          <div class="xp-ranking-item-score"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -320,11 +515,72 @@ defineExpose({
         justify-content: space-between;
         margin-bottom: 16px;
       }
+
+      .xp-empty {
+        background-color: #f8fafc;
+        color: var(--color-text-secondary);
+        font-size: 12px;
+        font-weight: 400;
+        text-align: center;
+        padding: 12px;
+        border-radius: 8px;
+      }
     }
   }
 
   .xp-view-section + .xp-view-section {
     margin-top: 24px;
+  }
+
+  .xp-ranking-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    column-gap: 8px;
+
+    .xp-ranking-left {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .xp-ranking-info {
+        max-width: 198px;
+        .xp-ranking-name {
+          font-weight: 600;
+          font-size: 14px;
+          line-height: 18px;
+          color: var(--color-text);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
+        }
+
+        .xp-ranking-role {
+          font-size: 11px;
+          line-height: 14px;
+          color: var(--color-text-secondary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%;
+        }
+      }
+    }
+
+    .xp-ranking-item-score {
+      font-weight: 400;
+      font-size: 11px;
+      line-height: 14px;
+      color: #4241d9;
+      background: #f8fafc;
+      padding: 4px 8px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
   }
 }
 </style>

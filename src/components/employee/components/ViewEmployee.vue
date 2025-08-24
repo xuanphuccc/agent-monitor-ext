@@ -11,7 +11,7 @@ import { getSettings, calculateKpiRequests } from "@/utils/common";
 
 const toast = useToast();
 
-const emit = defineEmits(["employeeInfo", "loading"]);
+const emit = defineEmits(["loading"]);
 const props = defineProps({
   employee: {
     type: Object,
@@ -112,7 +112,6 @@ const getMonthlyUsageData = async () => {
     if (response && response.data && response.data.success) {
       const responseData = response.data.data;
       const dailyUsages = responseData?.dailyUsage || [];
-      emit("employeeInfo", responseData?.employeeInfo);
 
       const scopedMonthlyUsageData = {};
       dailyUsages.forEach((usage) => {
@@ -425,7 +424,7 @@ defineExpose({
       font-weight: 600;
       font-size: 14px;
       line-height: 18px;
-      color: var(--text-color);
+      color: var(--color-text);
     }
 
     .xp-view-section-message {

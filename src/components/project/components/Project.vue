@@ -28,7 +28,6 @@ const props = defineProps({
 });
 
 const scopedProject = ref(null);
-const projectInfo = ref(null);
 const isExpand = ref(null);
 const loading = ref(false);
 const viewProjectRef = useTemplateRef("view-project-ref");
@@ -137,20 +136,20 @@ const reloadData = () => {
               <Skeleton v-if="loading" shape="circle" size="28px" class="mr-2" />
               <Avatar
                 v-else
-                :label="getAvatarLetter(projectInfo?.projectName)"
+                :label="getAvatarLetter(scopedProject.projectName)"
                 class="mr-2"
-                style="background-color: #dee9fc; color: #1a2551"
+                style="background-color: #dee9fc; color: #1a2551; flex-shrink: 0"
                 shape="circle"
               />
               <div class="xp-project-name-container">
                 <Skeleton v-if="loading" width="120px" height="14px" />
-                <div v-else class="xp-project-name">
-                  {{ projectInfo && projectInfo.projectName ? projectInfo.projectName : "N/A" }}
+                <div v-else class="xp-project-name" :title="scopedProject.projectName">
+                  {{ scopedProject.projectName }}
                 </div>
 
                 <Skeleton v-if="loading" width="100px" height="12px" style="margin-top: 6px" />
-                <div v-else class="xp-project-role">
-                  {{ projectInfo && projectInfo.divisionName ? projectInfo.divisionName : "N/A" }}
+                <div v-else class="xp-project-role" :title="scopedProject.divisionName">
+                  {{ scopedProject.divisionName }}
                 </div>
               </div>
             </div>
@@ -193,7 +192,6 @@ const reloadData = () => {
             ref="view-project-ref"
             :project="scopedProject"
             @loading="loading = $event"
-            @projectInfo="projectInfo = $event"
           />
         </AccordionContent>
       </AccordionPanel>
@@ -230,16 +228,27 @@ const reloadData = () => {
       gap: 8px;
 
       .xp-project-name-container {
+        max-width: 200px;
         .xp-project-name {
+          max-width: 100%;
           font-size: 14px;
           line-height: 18px;
           font-weight: 600;
           color: var(--color-text);
+
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .xp-project-role {
+          max-width: 100%;
           line-height: 14px;
           font-size: 11px;
           color: var(--color-text-secondary);
+
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
       }
     }

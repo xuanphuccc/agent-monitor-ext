@@ -1,3 +1,5 @@
+import { notifications } from "./config-data";
+
 /**
  * Lấy giá trị từ chrome.storage.local
  * @param {string} key - Tên khóa để lấy giá trị
@@ -169,4 +171,20 @@ export const removeVietnameseMarks = (str) => {
   str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   str = str.replace(/đ/g, "d").replace(/Đ/g, "D");
   return str;
+};
+
+/**
+ * Lấy thông báo ngẫu nhiên
+ * @param {*} current
+ * @param {*} target
+ * @returns
+ */
+export const getRandomNotification = (current, target) => {
+  const n = notifications[Math.floor(Math.random() * notifications.length)];
+  const title = n.title;
+  const message = n.message
+    .replace(/{{current}}/g, current)
+    .replace(/{{target}}/g, target)
+    .replace(/{{target - current}}/g, target - current);
+  return { title, message };
 };

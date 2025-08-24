@@ -28,7 +28,6 @@ const props = defineProps({
 });
 
 const scopedEmployee = ref(null);
-const employeeInfo = ref(null);
 const isExpand = ref(null);
 const loading = ref(false);
 const viewEmployeeRef = useTemplateRef("view-employee-ref");
@@ -137,24 +136,20 @@ const reloadData = () => {
               <Skeleton v-if="loading" shape="circle" size="28px" class="mr-2" />
               <Avatar
                 v-else
-                :label="getAvatarLetter(employeeInfo?.EmployeeName)"
+                :label="getAvatarLetter(scopedEmployee.employeeName)"
                 class="mr-2"
-                style="background-color: #dee9fc; color: #1a2551"
+                style="background-color: #dee9fc; color: #1a2551; flex-shrink: 0"
                 shape="circle"
               />
               <div class="xp-employee-name-container">
                 <Skeleton v-if="loading" width="120px" height="14px" />
-                <div v-else class="xp-employee-name">
-                  {{
-                    employeeInfo && employeeInfo.EmployeeName ? employeeInfo.EmployeeName : "N/A"
-                  }}
+                <div v-else class="xp-employee-name" :title="scopedEmployee.employeeName">
+                  {{ scopedEmployee.employeeName }}
                 </div>
 
                 <Skeleton v-if="loading" width="100px" height="12px" style="margin-top: 6px" />
-                <div v-else class="xp-employee-role">
-                  {{
-                    employeeInfo && employeeInfo.PositionName ? employeeInfo.PositionName : "N/A"
-                  }}
+                <div v-else class="xp-employee-role" :title="scopedEmployee.employeeCode">
+                  {{ scopedEmployee.employeeCode }}
                 </div>
               </div>
             </div>
@@ -197,7 +192,6 @@ const reloadData = () => {
             ref="view-employee-ref"
             :employee="scopedEmployee"
             @loading="loading = $event"
-            @employeeInfo="employeeInfo = $event"
           />
         </AccordionContent>
       </AccordionPanel>
@@ -234,21 +228,27 @@ const reloadData = () => {
       gap: 8px;
 
       .xp-employee-name-container {
+        max-width: 200px;
         .xp-employee-name {
           font-size: 14px;
           line-height: 18px;
           font-weight: 600;
           color: var(--color-text);
+
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .xp-employee-role {
           line-height: 14px;
           font-size: 11px;
           color: var(--color-text-secondary);
+
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
       }
-    }
-
-    .xp-employee-actions {
     }
   }
 }
