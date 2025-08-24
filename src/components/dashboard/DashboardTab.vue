@@ -187,6 +187,7 @@ initData();
   padding: 0px 12px 12px;
 
   .xp-dashboard-panel {
+    background: #ffffff;
     width: 100%;
     box-shadow:
       rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,

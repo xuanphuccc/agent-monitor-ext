@@ -53,6 +53,7 @@ const showSetting = ref(false);
   height: 100%;
   position: relative;
   overflow-y: auto;
+  background: #f9fbfc;
 
   .xp-header {
     flex-shrink: 0;

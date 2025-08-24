@@ -231,6 +231,7 @@ watch(
   flex-direction: column;
   width: 100%;
   height: 100%;
+  background: #ffffff;
 
   .xp-setting-header {
     display: flex;

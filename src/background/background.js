@@ -1,7 +1,7 @@
 import { calculateKpiRequests, getFromStorage } from "@/utils/common";
 import { getMonthlyUsageHistory } from "@/services/stats-api";
 
-const KPI_CHECK_ALARM_NAME = "kpiCheckAlarm";
+const KPI_CHECK_ALARM_PREFIX = "kpiCheckAlarm_";
 
 /**
  * Lấy cài đặt thô từ chrome.storage.local mà không cần chuyển đổi.
@@ -13,9 +13,36 @@ const getRawSettings = async () => {
     quickViewRequests: true,
     kpiAlert: true,
     minRequestCount: 5,
-    notificationTime: { hours: 16, minutes: 30 },
+    notificationTimes: [
+      { hours: 10, minutes: 30 },
+      { hours: 16, minutes: 30 },
+    ],
   };
-  return { ...defaults, ...(data.settings || {}) };
+  const savedSettings = data.settings || {};
+
+  const settings = { ...defaults, ...savedSettings };
+
+  settings.notificationTimes = settings.notificationTimes.filter(
+    (time) => time !== null && time !== undefined,
+  );
+  if (settings.notificationTimes.length === 0) {
+    settings.notificationTimes = defaults.notificationTimes;
+  }
+
+  return settings;
+};
+
+/**
+ * Xóa tất cả các báo thức KPI hiện có.
+ */
+const clearAllKpiAlarms = async () => {
+  const alarms = await chrome.alarms.getAll();
+  for (const alarm of alarms) {
+    if (alarm.name.startsWith(KPI_CHECK_ALARM_PREFIX)) {
+      await chrome.alarms.clear(alarm.name);
+    }
+  }
+  console.log("⛔ All KPI check alarms cleared.");
 };
 
 /**
@@ -24,34 +51,43 @@ const getRawSettings = async () => {
  */
 const scheduleKpiCheckAlarm = async () => {
   const settings = await getRawSettings();
-  if (settings.kpiAlert) {
-    const now = new Date();
-    const { hours, minutes } = settings.notificationTime;
+  await clearAllKpiAlarms(); // Xóa tất cả báo thức cũ trước khi lên lịch lại
 
-    let nextAlarmTime = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      hours,
-      minutes,
-      0,
-      0,
+  if (settings.kpiAlert && settings.notificationTimes && settings.notificationTimes.length > 0) {
+    // Lọc các khung giờ trùng lặp
+    const uniqueNotificationTimes = settings.notificationTimes.filter(
+      (time, index, self) =>
+        index === self.findIndex((t) => t.hours === time.hours && t.minutes === time.minutes),
     );
 
-    // Nếu thời gian báo thức đã qua trong ngày hôm nay, đặt cho ngày mai
-    if (nextAlarmTime.getTime() < now.getTime()) {
-      nextAlarmTime.setDate(nextAlarmTime.getDate() + 1);
-    }
+    const now = new Date();
+    uniqueNotificationTimes.forEach((time) => {
+      const { hours, minutes } = time;
+      let nextAlarmTime = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        hours,
+        minutes,
+        0,
+        0,
+      );
 
-    chrome.alarms.create(KPI_CHECK_ALARM_NAME, {
-      when: nextAlarmTime.getTime(),
-      periodInMinutes: 24 * 60, // Lặp lại mỗi 24 giờ
+      // Nếu thời gian báo thức đã qua trong ngày hôm nay, đặt cho ngày mai
+      if (nextAlarmTime.getTime() < now.getTime()) {
+        nextAlarmTime.setDate(nextAlarmTime.getDate() + 1);
+      }
+
+      const alarmName = `${KPI_CHECK_ALARM_PREFIX}${hours.toString().padStart(2, "0")}_${minutes.toString().padStart(2, "0")}`;
+
+      chrome.alarms.create(alarmName, {
+        when: nextAlarmTime.getTime(),
+        periodInMinutes: 24 * 60, // Lặp lại mỗi 24 giờ
+      });
+      console.log(`✅ KPI check alarm scheduled for: ${nextAlarmTime} (Alarm: ${alarmName})`);
     });
-    console.log(`✅ KPI check alarm scheduled for: ${nextAlarmTime}`);
   } else {
-    // Nếu người dùng tắt cảnh báo, hãy xóa báo thức
-    chrome.alarms.clear(KPI_CHECK_ALARM_NAME);
-    console.log("⛔ KPI check alarm cleared.");
+    console.log("⛔ KPI alerts are disabled or no notification times are set.");
   }
 };
 
@@ -96,10 +132,7 @@ const performKpiCheck = async () => {
       const todayUsage = dailyUsages.find(
         (usage) =>
           usage.date ===
-          `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(currentDay).padStart(
-            2,
-            "0",
-          )}`,
+          `${currentYear}-${String(currentMonth).padStart(2, "0")}-${String(currentDay).padStart(2, "0")}`,
       );
 
       if (todayUsage) {
@@ -137,8 +170,8 @@ chrome.runtime.onInstalled.addListener(() => {
  * Khi báo thức kiểm tra KPI được kích hoạt, hãy thực hiện kiểm tra.
  */
 chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === KPI_CHECK_ALARM_NAME) {
-    console.log("⏰ KPI check alarm triggered.");
+  if (alarm.name.startsWith(KPI_CHECK_ALARM_PREFIX)) {
+    console.log(`⏰ KPI check alarm triggered: ${alarm.name}`);
     performKpiCheck();
   }
 });

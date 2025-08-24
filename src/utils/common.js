@@ -44,15 +44,17 @@ export const showNotification = (title = "This is title", message = "This is mes
 export const saveSettings = (settings) => {
   const settingsToSave = { ...settings };
   if (Array.isArray(settingsToSave.notificationTimes)) {
-    settingsToSave.notificationTimes = settingsToSave.notificationTimes.map((time) => {
-      if (time instanceof Date) {
-        return {
-          hours: time.getHours(),
-          minutes: time.getMinutes(),
-        };
-      }
-      return time;
-    });
+    settingsToSave.notificationTimes = settingsToSave.notificationTimes
+      .filter((time) => time !== null && time !== undefined)
+      .map((time) => {
+        if (time instanceof Date) {
+          return {
+            hours: time.getHours(),
+            minutes: time.getMinutes(),
+          };
+        }
+        return time;
+      });
   }
   chrome.storage.local.set({ settings: settingsToSave });
 };
@@ -67,26 +69,37 @@ export const getSettings = async () => {
     quickViewRequests: true,
     kpiAlert: true,
     minRequestCount: 5,
-    notificationTimes: [{ hours: 16, minutes: 30 }], // Mặc định là 16:30
+    // Mặc định là 10:30 và 16:30
+    notificationTimes: [
+      { hours: 10, minutes: 30 },
+      { hours: 16, minutes: 30 },
+    ],
   };
 
   const savedSettings = data.settings || {};
 
   // Hợp nhất cài đặt đã lưu với giá trị mặc định
   const settings = {
-    quickViewRequests: savedSettings.quickViewRequests ?? defaults.quickViewRequests,
-    kpiAlert: savedSettings.kpiAlert ?? defaults.kpiAlert,
-    minRequestCount: savedSettings.minRequestCount ?? defaults.minRequestCount,
-    notificationTimes: savedSettings.notificationTimes ?? defaults.notificationTimes,
+    ...defaults,
+    ...savedSettings,
   };
 
   // Chuyển đổi mảng các object { hours, minutes } thành mảng các Date object để DatePicker sử dụng
   if (Array.isArray(settings.notificationTimes)) {
-    settings.notificationTimes = settings.notificationTimes.map((time) => {
+    let savedNotificationTimes = settings.notificationTimes.filter(
+      (time) => time !== null && time !== undefined,
+    );
+    if (savedNotificationTimes.length === 0) {
+      savedNotificationTimes = defaults.notificationTimes;
+    }
+
+    savedNotificationTimes = savedNotificationTimes.map((time) => {
       const date = new Date();
       date.setHours(time.hours, time.minutes, 0, 0);
       return date;
     });
+
+    settings.notificationTimes = savedNotificationTimes;
   } else {
     // Nếu notificationTimes không phải là mảng, chuyển đổi giá trị cũ sang mảng
     const time = settings.notificationTimes;
