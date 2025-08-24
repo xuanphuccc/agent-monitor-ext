@@ -14,7 +14,18 @@ export default defineManifest({
   action: {
     default_popup: "index.html",
     default_icon: "public/logo-32.png",
-    default_title: "AI Agent Monitor (Nhấn Ctrl + B để mở)",
+    default_title: "AI Agent Monitor (Nhấn Ctrl + Shift + Y hoặc Cmd + Shift + Y trên Mac để mở)",
+  },
+
+  // Thêm mục commands để định nghĩa phím tắt
+  commands: {
+    _execute_action: {
+      suggested_key: {
+        default: "Ctrl+Shift+Y",
+        mac: "Ctrl+Shift+Y",
+      },
+      description: "Bật popup của AI Agent Monitor",
+    },
   },
 
   icons: {

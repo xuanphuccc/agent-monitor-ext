@@ -19,8 +19,8 @@ const initData = async () => {
       document.documentElement.classList.remove("xp-dark-mode");
     }
   } else {
-    darkMode.value = true; // Default to dark mode
-    document.documentElement.classList.add("xp-dark-mode");
+    darkMode.value = false; // Default to dark mode
+    document.documentElement.classList.remove("xp-dark-mode");
   }
 };
 initData();
