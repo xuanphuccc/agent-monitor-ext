@@ -213,7 +213,8 @@ const initData = async () => {
     // Lấy cài đặt người dùng
     userSettings.value = await getSettings();
 
-    await Promise.all([getMonthlyUsageData(), getWarningEmployeesData()]);
+    getWarningEmployeesData();
+    await getMonthlyUsageData();
 
     loading.value = false;
     emit("loading", false);

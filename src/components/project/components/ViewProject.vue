@@ -149,12 +149,15 @@ const getWarningEmployeesData = async () => {
       currentYear,
       currentMonth,
       "all",
-      props.project.projectName,
       props.project.divisionName,
+      props.project.projectName,
     );
     if (response && response.data && response.data.success && response.data.data) {
       const responseData = response.data.data;
-      warningEmployees.value = responseData.warningEmployees ?? [];
+      const filteredEmployees = (responseData.warningEmployees ?? []).filter(
+        (employee) => employee.warningStats?.totalDaysNotMeetingTarget > 0,
+      );
+      warningEmployees.value = filteredEmployees;
     } else {
       toast.add({
         severity: "error",
@@ -411,7 +414,7 @@ defineExpose({
               style="background-color: #dee9fc; color: #1a2551"
               shape="circle"
             />
-            <div class="xp-ranking-info">
+            <div class="xp-ranking-info" style="max-width: 198px">
               <div class="xp-ranking-name" :title="user.employeeName">
                 {{ user.employeeName }}
               </div>
@@ -420,7 +423,15 @@ defineExpose({
               </div>
             </div>
           </div>
-          <div class="xp-ranking-item-score">{{ user.relevantToolsTotal }} request</div>
+          <div
+            class="xp-ranking-item-score"
+            :class="[
+              { error: user.relevantToolsTotal === 0 },
+              { warning: user.relevantToolsTotal > 0 },
+            ]"
+          >
+            {{ user.relevantToolsTotal }} request
+          </div>
         </div>
         <div v-else-if="!loading && underperformingEmployees.length === 0" class="xp-empty">
           Không có nhân viên nào.
@@ -428,7 +439,7 @@ defineExpose({
         <div v-else class="xp-ranking-item">
           <div class="xp-ranking-left">
             <Skeleton shape="circle" size="28px" class="mr-2" />
-            <div class="xp-ranking-info">
+            <div class="xp-ranking-info" style="max-width: 198px">
               <div class="xp-ranking-name">
                 <Skeleton width="150px" height="14px" />
               </div>
@@ -437,7 +448,7 @@ defineExpose({
               </div>
             </div>
           </div>
-          <div class="xp-ranking-item-score"></div>
+          <!-- <div class="xp-ranking-item-score"></div> -->
         </div>
       </div>
     </div>
@@ -458,7 +469,7 @@ defineExpose({
               style="background-color: #dee9fc; color: #1a2551"
               shape="circle"
             />
-            <div class="xp-ranking-info">
+            <div class="xp-ranking-info" style="max-width: 198px">
               <div class="xp-ranking-name" :title="user.employeeInfo?.EmployeeName">
                 {{ user.employeeInfo?.EmployeeName }}
               </div>
@@ -470,7 +481,13 @@ defineExpose({
               </div>
             </div>
           </div>
-          <div class="xp-ranking-item-score">
+          <div
+            class="xp-ranking-item-score"
+            :class="[
+              { error: user.warningStats?.totalDaysNotMeetingTarget >= 3 },
+              { warning: user.warningStats?.totalDaysNotMeetingTarget < 3 },
+            ]"
+          >
             {{ user.warningStats?.totalDaysNotMeetingTarget || 0 }} ngày
           </div>
         </div>
@@ -480,7 +497,7 @@ defineExpose({
         <div v-else class="xp-ranking-item">
           <div class="xp-ranking-left">
             <Skeleton shape="circle" size="28px" class="mr-2" />
-            <div class="xp-ranking-info">
+            <div class="xp-ranking-info" style="max-width: 198px">
               <div class="xp-ranking-name">
                 <Skeleton width="150px" height="14px" />
               </div>
@@ -489,7 +506,7 @@ defineExpose({
               </div>
             </div>
           </div>
-          <div class="xp-ranking-item-score"></div>
+          <!-- <div class="xp-ranking-item-score"></div> -->
         </div>
       </div>
     </div>
@@ -547,7 +564,6 @@ defineExpose({
       gap: 16px;
 
       .xp-ranking-info {
-        max-width: 198px;
         .xp-ranking-name {
           font-weight: 600;
           font-size: 14px;
@@ -575,11 +591,24 @@ defineExpose({
       font-weight: 400;
       font-size: 11px;
       line-height: 14px;
-      color: #4241d9;
-      background: #f8fafc;
+      color: #2563eb;
+      background: color-mix(in srgb, var(--p-blue-50), transparent 5%);
+      border: 1px solid #bfdbfe;
       padding: 4px 8px;
       border-radius: 8px;
       white-space: nowrap;
+      font-weight: 500;
+
+      &.warning {
+        background-color: color-mix(in srgb, var(--p-yellow-50), transparent 5%);
+        color: #ca8a04;
+        border: 1px solid #fef08a;
+      }
+      &.error {
+        background-color: color-mix(in srgb, var(--p-red-50), transparent 5%);
+        color: #dc2626;
+        border: 1px solid #fecaca;
+      }
     }
   }
 }

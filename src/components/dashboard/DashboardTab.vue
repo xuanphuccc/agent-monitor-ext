@@ -84,7 +84,7 @@ initData();
                 style="background-color: #dee9fc; color: #1a2551"
                 shape="circle"
               />
-              <div class="xp-ranking-info">
+              <div class="xp-ranking-info" style="max-width: 152px">
                 <div class="xp-ranking-name" :title="user.employeeName">
                   {{ user.employeeName }}
                 </div>
@@ -101,7 +101,7 @@ initData();
                 <Skeleton width="20px" height="20px" />
               </div>
               <Skeleton shape="circle" size="28px" class="mr-2" />
-              <div class="xp-ranking-info">
+              <div class="xp-ranking-info" style="max-width: 152px">
                 <div class="xp-ranking-name">
                   <Skeleton width="150px" height="14px" />
                 </div>
@@ -110,7 +110,7 @@ initData();
                 </div>
               </div>
             </div>
-            <div class="xp-ranking-item-score"></div>
+            <!-- <div class="xp-ranking-item-score"></div> -->
           </div>
         </div>
       </div>
@@ -155,7 +155,7 @@ initData();
                 style="background-color: #dee9fc; color: #1a2551"
                 shape="circle"
               />
-              <div class="xp-ranking-info">
+              <div class="xp-ranking-info" style="max-width: 190px">
                 <div class="xp-ranking-name" :title="project.projectName">
                   {{ project.projectName }}
                 </div>
@@ -172,7 +172,7 @@ initData();
                 <Skeleton width="20px" height="20px" />
               </div>
               <Skeleton shape="circle" size="28px" class="mr-2" />
-              <div class="xp-ranking-info">
+              <div class="xp-ranking-info" style="max-width: 190px">
                 <div class="xp-ranking-name">
                   <Skeleton width="150px" height="14px" />
                 </div>
@@ -181,7 +181,7 @@ initData();
                 </div>
               </div>
             </div>
-            <div class="xp-ranking-item-score"></div>
+            <!-- <div class="xp-ranking-item-score"></div> -->
           </div>
         </div>
       </div>
@@ -255,7 +255,6 @@ initData();
       }
 
       .xp-ranking-info {
-        max-width: 154px;
         .xp-ranking-name {
           font-weight: 600;
           font-size: 14px;
@@ -283,11 +282,13 @@ initData();
       font-weight: 400;
       font-size: 11px;
       line-height: 14px;
-      color: #4241d9;
-      background: #f8fafc;
+      color: #2563eb;
+      background: color-mix(in srgb, var(--p-blue-50), transparent 5%);
+      border: 1px solid #bfdbfe;
       padding: 4px 8px;
       border-radius: 8px;
       white-space: nowrap;
+      font-weight: 500;
     }
   }
 }
