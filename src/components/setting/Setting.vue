@@ -53,7 +53,7 @@ const settingConfigs = ref([
         description: null,
         type: "text",
         field: "version",
-        value: "1.0.6",
+        value: "1.0.8",
       },
       {
         icon: null,
@@ -61,7 +61,7 @@ const settingConfigs = ref([
         description: null,
         type: "text",
         field: "author",
-        value: "@txphuc",
+        value: atob("QHR4cGh1Yw=="),
       },
       {
         icon: null,
