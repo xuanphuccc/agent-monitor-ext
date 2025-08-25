@@ -115,6 +115,7 @@ const scheduleKpiCheckAlarm = async () => {
 const updateBadge = (requestCount) => {
   const text = requestCount > 0 ? String(requestCount) : "";
   chrome.action.setBadgeText({ text: text });
+  chrome.action.setBadgeTextColor({ color: "#ffffff" });
   chrome.action.setBadgeBackgroundColor({ color: "#4285F4" }); // Màu xanh lam của Google
 };
 
