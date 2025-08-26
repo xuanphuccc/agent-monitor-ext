@@ -25,8 +25,8 @@ const datePickerConfig = ref({
       radius: "6px",
     },
     selected: {
-      background: "#cbd5e1",
-      color: "#334155",
+      // background: "#cbd5e1",
+      // color: "#334155",
     },
   },
 });
@@ -462,6 +462,41 @@ defineExpose({
           border: 1px solid #d1b6dd;
           background: linear-gradient(0deg, #f5ebff 0%, #fefcff 100%);
         }
+
+        // Dark mode styles
+        :root[class="xp-dark-mode"] & {
+          &.usage-low {
+            border: 1px solid rgba(255, 99, 71, 0.5);
+            background: linear-gradient(0deg, rgba(139, 0, 0, 0.2) 0%, rgba(139, 0, 0, 0.05) 100%);
+          }
+
+          &.usage-medium {
+            border: 1px solid rgba(60, 179, 113, 0.5);
+            background: linear-gradient(
+              0deg,
+              rgba(34, 139, 34, 0.2) 0%,
+              rgba(34, 139, 34, 0.05) 100%
+            );
+          }
+
+          &.usage-high {
+            border: 1px solid rgba(100, 149, 237, 0.5);
+            background: linear-gradient(
+              0deg,
+              rgba(25, 25, 112, 0.2) 0%,
+              rgba(25, 25, 112, 0.05) 100%
+            );
+          }
+
+          &.usage-very-high {
+            border: 1px solid rgba(147, 112, 219, 0.5);
+            background: linear-gradient(
+              0deg,
+              rgba(75, 0, 130, 0.2) 0%,
+              rgba(75, 0, 130, 0.05) 100%
+            );
+          }
+        }
         gap: 16px;
         .xp-overview-chart {
           flex-shrink: 0;
@@ -479,7 +514,7 @@ defineExpose({
             font-weight: 500;
             .info-title-icon {
               margin-left: 4px;
-              color: var(--color-text-secondary);
+              color: var(--text-secondary-color);
               cursor: pointer;
               font-size: 12px;
             }
@@ -530,7 +565,7 @@ defineExpose({
         flex-direction: column;
         user-select: none;
         &.leave-day {
-          background: #dbeafe;
+          background: var(--p-message-info-background);
         }
         .xp-datepicker-day {
           display: flex;
@@ -546,7 +581,7 @@ defineExpose({
           .xp-datepicker-day-number {
             font-size: 10px;
             line-height: 10px;
-            color: var(--color-text-secondary);
+            color: var(--text-secondary-color);
             margin-left: auto;
           }
         }

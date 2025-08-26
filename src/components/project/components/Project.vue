@@ -208,6 +208,7 @@ const reloadData = () => {
   border-radius: 12px;
   overflow: hidden;
   margin-top: 2px;
+  border: 1px solid var(--border-color-dark-only);
 
   .xp-project-header {
     width: 100%;
@@ -244,7 +245,7 @@ const reloadData = () => {
           max-width: 100%;
           line-height: 14px;
           font-size: 11px;
-          color: var(--color-text-secondary);
+          color: var(--text-secondary-color);
 
           white-space: nowrap;
           overflow: hidden;

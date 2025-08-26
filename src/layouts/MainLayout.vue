@@ -68,7 +68,6 @@ const toggleDarkMode = () => {
       </div>
       <div class="xp-header-actions">
         <Button
-          v-if="false"
           @click.stop="toggleDarkMode"
           size="small"
           :icon="darkMode ? 'pi pi-sun' : 'pi pi-moon'"
@@ -104,6 +103,7 @@ const toggleDarkMode = () => {
   flex-direction: column;
   width: 100%;
   height: 100%;
+  background: var(--body-bg);
   // border: 1px solid var(--color-border);
 
   .xp-header {
@@ -113,7 +113,8 @@ const toggleDarkMode = () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--body-bg);
     .xp-logo {
       display: flex;
       align-items: center;
@@ -142,7 +143,7 @@ const toggleDarkMode = () => {
     height: calc(100% - 48px);
     padding: 0;
     overflow-y: hidden;
-    background-color: var(--color-background);
+    background-color: var(--body-bg);
   }
 }
 </style>

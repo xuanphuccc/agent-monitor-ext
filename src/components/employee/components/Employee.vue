@@ -208,6 +208,7 @@ const reloadData = () => {
   border-radius: 12px;
   overflow: hidden;
   margin-top: 2px;
+  border: 1px solid var(--border-color-dark-only);
 
   .xp-employee-header {
     width: 100%;
@@ -242,7 +243,7 @@ const reloadData = () => {
         .xp-employee-role {
           line-height: 14px;
           font-size: 11px;
-          color: var(--color-text-secondary);
+          color: var(--text-secondary-color);
 
           white-space: nowrap;
           overflow: hidden;

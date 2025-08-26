@@ -231,7 +231,7 @@ watch(
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background: #ffffff;
+  background: var(--card-bg);
 
   .xp-setting-header {
     display: flex;
@@ -247,7 +247,7 @@ watch(
       font-size: 14px;
       line-height: 18px;
       font-weight: 600;
-      color: var(--color-text);
+      color: var(--text-color);
     }
   }
 
@@ -263,7 +263,7 @@ watch(
         font-size: 14px;
         line-height: 18px;
         font-weight: 600;
-        color: var(--color-text);
+        color: var(--text-colort);
         margin-bottom: 16px;
       }
 
@@ -307,14 +307,14 @@ watch(
             .xp-setting-item-value {
               font-size: 13px;
               line-height: 18px;
-              color: var(--color-text-secondary);
+              color: var(--text-secondary-color);
             }
           }
 
           .xp-setting-item-description {
             font-size: 11px;
             line-height: 1.5;
-            color: var(--color-text-secondary);
+            color: var(--text-secondary-color);
             margin-top: 4px;
           }
 

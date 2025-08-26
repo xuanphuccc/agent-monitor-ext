@@ -53,7 +53,7 @@ const showSetting = ref(false);
   height: 100%;
   position: relative;
   overflow-y: auto;
-  background: #f9fbfc;
+  background: var(--body-bg);
 
   .xp-header {
     flex-shrink: 0;
@@ -62,7 +62,7 @@ const showSetting = ref(false);
     justify-content: center;
     padding: 12px;
     backdrop-filter: blur(8px);
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--blur-bg);
     // border-bottom: 1px solid #efefef;
     position: sticky;
     top: 0;

@@ -393,7 +393,7 @@ defineExpose({
           :data="chartData"
           :options="chartOptions"
           :height="chartHeight"
-          style="border: 1px solid #dee9fc; border-radius: 8px"
+          style="border: 1px solid var(--border-color); border-radius: 8px"
         />
       </div>
     </div>
@@ -535,7 +535,7 @@ defineExpose({
 
       .xp-empty {
         background-color: #f8fafc;
-        color: var(--color-text-secondary);
+        color: var(--text-secondary-color);
         font-size: 12px;
         font-weight: 400;
         text-align: center;
@@ -578,7 +578,7 @@ defineExpose({
         .xp-ranking-role {
           font-size: 11px;
           line-height: 14px;
-          color: var(--color-text-secondary);
+          color: var(--text-secondary-color);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -591,23 +591,23 @@ defineExpose({
       font-weight: 400;
       font-size: 11px;
       line-height: 14px;
-      color: #2563eb;
-      background: color-mix(in srgb, var(--p-blue-50), transparent 5%);
-      border: 1px solid #bfdbfe;
+      color: var(--p-message-info-color);
+      background: var(--p-message-info-background);
+      border: 1px solid var(--p-message-info-border-color);
       padding: 4px 8px;
       border-radius: 8px;
       white-space: nowrap;
       font-weight: 500;
 
       &.warning {
-        background-color: color-mix(in srgb, var(--p-yellow-50), transparent 5%);
-        color: #ca8a04;
-        border: 1px solid #fef08a;
+        background-color: var(--p-message-warn-background);
+        color: var(--p-message-warn-color);
+        border: 1px solid var(--p-message-warn-border-color);
       }
       &.error {
-        background-color: color-mix(in srgb, var(--p-red-50), transparent 5%);
-        color: #dc2626;
-        border: 1px solid #fecaca;
+        background-color: var(--p-message-error-background);
+        color: var(--p-message-error-color);
+        border: 1px solid var(--p-message-error-border-color);
       }
     }
   }

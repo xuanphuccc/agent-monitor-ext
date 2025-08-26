@@ -195,7 +195,8 @@ initData();
   padding: 0px 12px 12px;
 
   .xp-dashboard-panel {
-    background: #ffffff;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color-dark-only);
     width: 100%;
     box-shadow:
       rgba(0, 0, 0, 0.1) 0px 1px 3px 0px,
@@ -210,7 +211,7 @@ initData();
         font-weight: 600;
         font-size: 14px;
         line-height: 18px;
-        color: var(--color-text);
+        color: var(--text-color);
       }
 
       .xp-view-section-content {
@@ -251,7 +252,7 @@ initData();
         font-size: 14px;
         line-height: 20px;
         height: 20px;
-        color: var(--color-text);
+        color: var(--text-color);
       }
 
       .xp-ranking-info {
@@ -259,7 +260,7 @@ initData();
           font-weight: 600;
           font-size: 14px;
           line-height: 18px;
-          color: var(--color-text);
+          color: var(--text-color);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -269,7 +270,7 @@ initData();
         .xp-ranking-role {
           font-size: 11px;
           line-height: 14px;
-          color: var(--color-text-secondary);
+          color: var(--text-secondary-color);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -282,9 +283,9 @@ initData();
       font-weight: 400;
       font-size: 11px;
       line-height: 14px;
-      color: #2563eb;
-      background: color-mix(in srgb, var(--p-blue-50), transparent 5%);
-      border: 1px solid #bfdbfe;
+      color: var(--p-message-info-color);
+      background: var(--p-message-info-background);
+      border: 1px solid var(--p-message-info-border-color);
       padding: 4px 8px;
       border-radius: 8px;
       white-space: nowrap;
