@@ -591,23 +591,23 @@ defineExpose({
       font-weight: 400;
       font-size: 11px;
       line-height: 14px;
-      color: var(--p-message-info-color);
-      background: var(--p-message-info-background);
-      border: 1px solid var(--p-message-info-border-color);
+      color: var(--xp-message-info-color);
+      background: var(--xp-message-info-background);
+      border: 1px solid var(--xp-message-info-border-color);
       padding: 4px 8px;
       border-radius: 8px;
       white-space: nowrap;
       font-weight: 500;
 
       &.warning {
-        background-color: var(--p-message-warn-background);
-        color: var(--p-message-warn-color);
-        border: 1px solid var(--p-message-warn-border-color);
+        background-color: var(--xp-message-warn-background);
+        color: var(--xp-message-warn-color);
+        border: 1px solid var(--xp-message-warn-border-color);
       }
       &.error {
-        background-color: var(--p-message-error-background);
-        color: var(--p-message-error-color);
-        border: 1px solid var(--p-message-error-border-color);
+        background-color: var(--xp-message-error-background);
+        color: var(--xp-message-error-color);
+        border: 1px solid var(--xp-message-error-border-color);
       }
     }
   }

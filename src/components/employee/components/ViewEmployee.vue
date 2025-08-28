@@ -142,6 +142,7 @@ const getMonthlyUsageData = async () => {
         };
       });
 
+      console.log(`Monthly Data - ${selectedMonth}: `, scopedMonthlyUsageData);
       monthlyUsageData.value = scopedMonthlyUsageData;
     } else {
       toast.add({
@@ -357,8 +358,14 @@ defineExpose({
               v-else
               @click="handleDateSelect($event, monthlyUsageData[slotProps.date.day])"
               class="xp-datepicker-day-content"
-              :class="[{ 'leave-day': monthlyUsageData[slotProps.date.day].isOnLeave }]"
-              :title="`${monthlyUsageData[slotProps.date.day].isOnLeave ? 'Nghỉ phép: ' + monthlyUsageData[slotProps.date.day].leaveDay + ' | ' : ''}Nhấn để xem chi tiết`"
+              :class="[
+                {
+                  'leave-day':
+                    monthlyUsageData[slotProps.date.day] &&
+                    monthlyUsageData[slotProps.date.day].isOnLeave,
+                },
+              ]"
+              :title="`${monthlyUsageData[slotProps.date.day] && monthlyUsageData[slotProps.date.day].isOnLeave ? 'Nghỉ phép: ' + monthlyUsageData[slotProps.date.day].leaveDay + ' | ' : ''}Nhấn để xem chi tiết`"
             >
               <div class="xp-datepicker-day">
                 <div
@@ -565,7 +572,7 @@ defineExpose({
         flex-direction: column;
         user-select: none;
         &.leave-day {
-          background: var(--p-message-info-background);
+          background: var(--xp-message-info-background);
         }
         .xp-datepicker-day {
           display: flex;

@@ -7,6 +7,7 @@ import Setting from "@/components/setting/Setting.vue";
 import { SelectButton } from "primevue";
 import { ref } from "vue";
 import Toast from "primevue/toast";
+import { getFromStorage } from "./utils/common";
 
 const currentTab = ref(1);
 const options = [
@@ -15,6 +16,26 @@ const options = [
   { label: "Tổng quan", value: 3 },
 ];
 const showSetting = ref(false);
+
+/**
+ * Khởi tạo dữ liệu ban đầu
+ */
+const initData = async () => {
+  try {
+    let [localEmployees, localProjects] = await Promise.all([
+      getFromStorage("employeeList"),
+      getFromStorage("projectList"),
+    ]);
+
+    // Nếu có danh sách dự án mà không có danh sách nhân viên -> focus tab dự án
+    if (localProjects && localProjects.length && (!localEmployees || !localEmployees.length)) {
+      currentTab.value = 2;
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+initData();
 </script>
 
 <template>
